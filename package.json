@@ -1,0 +1,38 @@
+{
+  "name": "superman-ai-orchestrator",
+  "version": "1.0.0",
+  "description": "Multi-modal AI orchestrator with GPT-5, Grok-3, Claude, Gemini, streaming, memory, and RAG",
+  "main": "superman-complete.mjs",
+  "type": "module",
+  "scripts": {
+    "start": "node superman-complete.mjs",
+    "dev": "node --watch superman-complete.mjs"
+  },
+  "keywords": [
+    "ai",
+    "orchestrator",
+    "azure",
+    "openai",
+    "claude",
+    "gemini",
+    "rag",
+    "multimodal"
+  ],
+  "author": "Saint Vision Technologies",
+  "license": "MIT",
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.32.1",
+    "@azure/cosmos": "^4.2.1",
+    "@azure/search-documents": "^12.2.0",
+    "@google/generative-ai": "^0.21.0",
+    "axios": "^1.7.9",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "microsoft-cognitiveservices-speech-sdk": "^1.42.0",
+    "openai": "^4.77.3"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
