@@ -1,7 +1,6 @@
 'use client';
 import React, { useState, useEffect, useRef } from 'react';
 import { Send, Paperclip, Mic, Volume2, Code2, StopCircle } from 'lucide-react';
-import Image from 'next/image';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -42,6 +41,12 @@ export default function ChatWindowEnhanced({ chatId }: ChatWindowProps) {
       textareaRef.current.style.height = textareaRef.current.scrollHeight + 'px';
     }
   }, [input]);
+
+  // Clear messages when chatId changes (New Chat functionality)
+  useEffect(() => {
+    setMessages([]);
+    setInput('');
+  }, [chatId]);
 
   // File Upload Handler
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -325,7 +330,7 @@ export default function ChatWindowEnhanced({ chatId }: ChatWindowProps) {
       <div className="messages-container">
         {messages.length === 0 ? (
           <div className="welcome-screen">
-            <Image
+            <img
               src="https://i.imgur.com/ganVqpV.png"
               alt="SaintSal Logo"
               width={120}
