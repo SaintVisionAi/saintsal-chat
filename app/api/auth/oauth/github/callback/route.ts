@@ -9,6 +9,8 @@ const GITHUB_CLIENT_ID = process.env.GITHUB_CLIENT_ID || process.env.NEXT_PUBLIC
 const GITHUB_CLIENT_SECRET = process.env.GITHUB_CLIENT_SECRET;
 const MONGODB_URI = process.env.MONGODB_URI!;
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(req: NextRequest) {
   try {
     const searchParams = req.nextUrl.searchParams;
