@@ -218,6 +218,25 @@ export default function Sidebar({
         </div>
       </div>
 
+      {/* Integrations Section */}
+      <div className="sidebar-integrations">
+        <div className="integrations-header">Integrations</div>
+        <div className="integrations-list">
+          <a href="/api/auth/oauth/github" className="integration-btn github">
+            <Code2 size={16} />
+            <span>Connect GitHub</span>
+          </a>
+          <button className="integration-btn google" onClick={() => alert('Google OAuth coming soon!')}>
+            <FileText size={16} />
+            <span>Connect Google</span>
+          </button>
+          <button className="integration-btn microsoft" onClick={() => alert('Microsoft OAuth coming soon!')}>
+            <Wrench size={16} />
+            <span>Connect Microsoft</span>
+          </button>
+        </div>
+      </div>
+
       {/* Footer Links */}
       <div className="sidebar-footer">
         <a href="/admin" className="console-link">

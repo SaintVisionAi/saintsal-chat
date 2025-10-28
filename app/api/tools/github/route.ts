@@ -1,8 +1,10 @@
 /**
  * app/api/tools/github/route.ts
  * GitHub Repository Analysis and File Reading
+ * Uses user's connected GitHub account or falls back to global token
  */
 import { NextRequest, NextResponse } from "next/server";
+import { MongoClient } from "mongodb";
 
 interface GitHubFileContent {
   name: string;
@@ -23,7 +25,30 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const githubToken = process.env.GITHUB_TOKEN;
+    // Try to get user's GitHub token from MongoDB
+    let githubToken = process.env.GITHUB_TOKEN; // Fallback to global token
+
+    const userEmail = req.cookies.get("saintsal_user_email")?.value;
+
+    if (userEmail) {
+      try {
+        const client = await MongoClient.connect(process.env.MONGODB_URI!);
+        const db = client.db(process.env.MONGODB_DB || "saintsal_db");
+        const user = await db.collection("users").findOne({
+          email: userEmail.toLowerCase(),
+          githubConnected: true,
+        });
+
+        if (user?.githubAccessToken) {
+          githubToken = user.githubAccessToken;
+        }
+
+        await client.close();
+      } catch (err) {
+        console.log("Could not fetch user GitHub token, using fallback:", err);
+      }
+    }
+
     const headers: HeadersInit = {
       "Accept": "application/vnd.github.v3+json",
       "User-Agent": "SaintSal-AI-Platform",
@@ -31,6 +56,12 @@ export async function POST(req: NextRequest) {
 
     if (githubToken) {
       headers["Authorization"] = `Bearer ${githubToken}`;
+    } else {
+      return NextResponse.json({
+        error: "GitHub not connected",
+        message: "Please connect your GitHub account to access repositories",
+        connectUrl: "/api/auth/oauth/github",
+      }, { status: 401 });
     }
 
     switch (action) {

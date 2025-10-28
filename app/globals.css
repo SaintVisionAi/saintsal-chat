@@ -347,6 +347,66 @@ body {
   color: var(--text-primary);
 }
 
+/* Sidebar Integrations */
+.sidebar-integrations {
+  padding: 12px;
+  border-top: 1px solid var(--glass-border);
+  margin-top: auto;
+}
+
+.integrations-header {
+  color: var(--text-tertiary);
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 8px;
+}
+
+.integrations-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.integration-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  border-radius: 6px;
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-decoration: none;
+}
+
+.integration-btn:hover {
+  background: var(--gold-glow);
+  border-color: var(--gold);
+  color: var(--gold);
+  transform: translateX(2px);
+}
+
+.integration-btn.github:hover {
+  border-color: #6e5494;
+  color: #6e5494;
+}
+
+.integration-btn.google:hover {
+  border-color: #4285f4;
+  color: #4285f4;
+}
+
+.integration-btn.microsoft:hover {
+  border-color: #00a4ef;
+  color: #00a4ef;
+}
+
 /* Sidebar Footer */
 .sidebar-footer {
   padding: 12px;
