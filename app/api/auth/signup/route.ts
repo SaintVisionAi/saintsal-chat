@@ -40,7 +40,7 @@ export async function POST(req: Request) {
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Create user
+    // Create user with limits and usage tracking
     const result = await users.insertOne({
       name: name || email.split("@")[0],
       email: email.toLowerCase(),
@@ -48,6 +48,18 @@ export async function POST(req: Request) {
       companyName: companyName || "",
       role: role || "",
       plan: "free", // Default to free plan
+      limits: {
+        messagesPerMonth: 50,
+        voiceMinutesPerMonth: 10,
+        ragQueriesPerMonth: 20,
+        maxFileSize: 5,
+      },
+      usage: {
+        messagesThisMonth: 0,
+        voiceMinutesThisMonth: 0,
+        ragQueriesThisMonth: 0,
+        lastReset: new Date(),
+      },
       createdAt: new Date(),
       updatedAt: new Date(),
     });
