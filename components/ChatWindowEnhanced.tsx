@@ -21,6 +21,7 @@ export default function ChatWindowEnhanced({ chatId }: ChatWindowProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
+  const [isStreaming, setIsStreaming] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const endRef = useRef<HTMLDivElement | null>(null);
@@ -28,6 +29,7 @@ export default function ChatWindowEnhanced({ chatId }: ChatWindowProps) {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
@@ -166,97 +168,149 @@ export default function ChatWindowEnhanced({ chatId }: ChatWindowProps) {
     );
   };
 
-  // Send Message
+  // 🔥 STREAMING CHAT FUNCTION
   async function sendMessage() {
-    if (!input.trim() || loading) return;
+    if (!input.trim() || isStreaming) return;
 
     const userText = input.trim();
-    const newMessage: Message = {
+    const userMessage: Message = {
       role: 'user',
       text: userText,
       timestamp: new Date(),
     };
 
-    setMessages((m) => [...m, newMessage]);
+    setMessages((m) => [...m, userMessage]);
     setInput('');
-    setLoading(true);
+    setIsStreaming(true);
+
+    // Create placeholder for assistant message
+    const assistantMessageIndex = messages.length + 1;
+    setMessages((m) => [
+      ...m,
+      {
+        role: 'assistant',
+        text: '',
+        timestamp: new Date(),
+      },
+    ]);
 
     try {
-      // Check if it's a code generation request
-      if (checkForCodeCommand(userText)) {
-        const codeResponse = await fetch('/api/tools/code', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            action: 'generate',
-            prompt: userText,
-            language: 'javascript',
-          }),
-        });
+      abortControllerRef.current = new AbortController();
 
-        const codeData = await codeResponse.json();
-
-        if (codeData.success) {
-          setMessages((m) => [
-            ...m,
-            {
-              role: 'assistant',
-              text: 'Here\'s the code I generated:',
-              code: {
-                language: codeData.language,
-                content: codeData.code,
-              },
-              timestamp: new Date(),
-            },
-          ]);
-          setLoading(false);
-          return;
-        }
-      }
-
-      // Regular chat
-      const resp = await fetch('/api/chat', {
+      // ⚡ SERVER-SENT EVENTS STREAMING
+      const response = await fetch('/api/chat', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: userText }),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          message: userText,
+          stream: true, // Enable streaming
+        }),
+        signal: abortControllerRef.current.signal,
       });
 
-      if (!resp.ok) {
-        const txt = await resp.text();
-        setMessages((m) => [
-          ...m,
-          {
-            role: 'assistant',
-            text: 'Error from server: ' + txt,
-            timestamp: new Date(),
-          },
-        ]);
-        setLoading(false);
-        return;
+      if (!response.ok) {
+        throw new Error('Failed to send message');
       }
 
-      const json = await resp.json();
-      setMessages((m) => [
-        ...m,
-        {
-          role: 'assistant',
-          text: json.text || 'No response',
-          timestamp: new Date(),
-        },
-      ]);
-    } catch (e: any) {
-      setMessages((m) => [
-        ...m,
-        {
-          role: 'assistant',
-          text: 'Connection error: ' + (e?.message || String(e)),
-          timestamp: new Date(),
-        },
-      ]);
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
+
+      if (!reader) {
+        throw new Error('No response body');
+      }
+
+      let buffer = '';
+      let fullResponse = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+
+        if (done) break;
+
+        // Decode the chunk
+        buffer += decoder.decode(value, { stream: true });
+
+        // Process complete SSE messages
+        const lines = buffer.split('\n');
+        buffer = lines.pop() || ''; // Keep incomplete line in buffer
+
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            const data = line.slice(6);
+
+            try {
+              const parsed = JSON.parse(data);
+
+              if (parsed.error) {
+                setMessages((prev) => {
+                  const newMessages = [...prev];
+                  newMessages[assistantMessageIndex] = {
+                    role: 'assistant',
+                    text: parsed.error,
+                    timestamp: new Date(),
+                  };
+                  return newMessages;
+                });
+                break;
+              }
+
+              if (parsed.done) {
+                // Streaming complete - trigger TTS if enabled
+                if (fullResponse && isSpeaking) {
+                  await speakMessage(fullResponse);
+                }
+                break;
+              }
+
+              if (parsed.token) {
+                fullResponse += parsed.token;
+
+                // Append token to assistant message
+                setMessages((prev) => {
+                  const newMessages = [...prev];
+                  newMessages[assistantMessageIndex] = {
+                    ...newMessages[assistantMessageIndex],
+                    text: newMessages[assistantMessageIndex].text + parsed.token,
+                  };
+                  return newMessages;
+                });
+              }
+            } catch (e) {
+              console.error('Error parsing SSE data:', e);
+            }
+          }
+        }
+      }
+    } catch (error: any) {
+      if (error.name === 'AbortError') {
+        console.log('Request aborted');
+      } else {
+        console.error('Chat error:', error);
+        setMessages((prev) => {
+          const newMessages = [...prev];
+          newMessages[assistantMessageIndex] = {
+            role: 'assistant',
+            text: 'Sorry, something went wrong. Please try again.',
+            timestamp: new Date(),
+          };
+          return newMessages;
+        });
+      }
     } finally {
-      setLoading(false);
+      setIsStreaming(false);
+      abortControllerRef.current = null;
     }
   }
+
+  // Stop streaming
+  const stopStreaming = () => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      setIsStreaming(false);
+    }
+  };
 
   function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -347,7 +401,7 @@ export default function ChatWindowEnhanced({ chatId }: ChatWindowProps) {
                 </div>
               </div>
             ))}
-            {loading && (
+            {isStreaming && messages[messages.length - 1]?.text === '' && (
               <div className="message-row assistant">
                 <div className="message-avatar">
                   <div className="avatar-assistant" />
@@ -393,24 +447,35 @@ export default function ChatWindowEnhanced({ chatId }: ChatWindowProps) {
             onKeyDown={handleKeyDown}
             placeholder="Message SaintSal... (try '/code' for code generation)"
             rows={1}
-            disabled={loading}
+            disabled={isStreaming}
           />
 
           <button
             className={`input-icon-btn ${isRecording ? 'recording' : ''}`}
             onClick={isRecording ? stopRecording : startRecording}
             title={isRecording ? 'Stop recording' : 'Voice input'}
+            disabled={isStreaming}
           >
             {isRecording ? <StopCircle size={20} /> : <Mic size={20} />}
           </button>
 
-          <button
-            className="send-btn"
-            onClick={sendMessage}
-            disabled={!input.trim() || loading}
-          >
-            <Send size={20} />
-          </button>
+          {isStreaming ? (
+            <button
+              className="send-btn stop-btn"
+              onClick={stopStreaming}
+              title="Stop generating"
+            >
+              <StopCircle size={20} />
+            </button>
+          ) : (
+            <button
+              className="send-btn"
+              onClick={sendMessage}
+              disabled={!input.trim()}
+            >
+              <Send size={20} />
+            </button>
+          )}
         </div>
         <div className="input-footer">
           SaintSal can make mistakes. Please verify important information.

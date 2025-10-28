@@ -107,59 +107,140 @@ export default function WalkieTalkie() {
     setIsProcessing(true);
 
     try {
-      // Convert blob to file
+      // Step 1: Speech-to-Text
       const audioFile = new File([audioBlob], 'recording.webm', { type: 'audio/webm' });
-
       const formData = new FormData();
       formData.append('audio', audioFile);
-      formData.append('context', JSON.stringify(messages.map((m) => ({ role: m.role, content: m.content }))));
 
-      // Send to voice stream API
-      const response = await fetch('/api/voice/stream', {
+      const sttResponse = await fetch('/api/voice/stt', {
         method: 'POST',
         body: formData,
       });
 
-      const data = await response.json();
+      const sttData = await sttResponse.json();
 
-      if (data.success) {
-        // Add user message
-        setMessages((prev) => [
-          ...prev,
-          {
-            role: 'user',
-            content: data.userText,
-            timestamp: new Date(),
-          },
-        ]);
+      if (!sttData.success) {
+        throw new Error('Speech-to-text failed');
+      }
 
-        // Add AI message
-        setMessages((prev) => [
-          ...prev,
-          {
-            role: 'assistant',
-            content: data.aiResponse,
-            timestamp: new Date(),
-          },
-        ]);
+      const userText = sttData.text;
 
-        // Play AI response
-        await playResponse(data.aiResponse);
+      // Add user message
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: 'user',
+          content: userText,
+          timestamp: new Date(),
+        },
+      ]);
+
+      // Step 2: Get streaming AI response
+      setIsProcessing(false); // Switch to playing mode
+      setIsPlaying(true);
+
+      const assistantMessageIndex = messages.length + 1;
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: 'assistant',
+          content: '',
+          timestamp: new Date(),
+        },
+      ]);
+
+      // Stream response from chat API
+      const chatResponse = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: userText,
+          stream: true,
+        }),
+      });
+
+      if (!chatResponse.ok) {
+        throw new Error('Chat API failed');
+      }
+
+      const reader = chatResponse.body?.getReader();
+      const decoder = new TextDecoder();
+
+      if (!reader) {
+        throw new Error('No response body');
+      }
+
+      let buffer = '';
+      let fullResponse = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop() || '';
+
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            const data = line.slice(6);
+            try {
+              const parsed = JSON.parse(data);
+
+              if (parsed.error) {
+                setMessages((prev) => {
+                  const newMessages = [...prev];
+                  newMessages[assistantMessageIndex] = {
+                    role: 'assistant',
+                    content: parsed.error,
+                    timestamp: new Date(),
+                  };
+                  return newMessages;
+                });
+                break;
+              }
+
+              if (parsed.done) {
+                // Streaming complete - play TTS
+                if (fullResponse) {
+                  await playResponse(fullResponse);
+                }
+                break;
+              }
+
+              if (parsed.token) {
+                fullResponse += parsed.token;
+                setMessages((prev) => {
+                  const newMessages = [...prev];
+                  newMessages[assistantMessageIndex] = {
+                    ...newMessages[assistantMessageIndex],
+                    content: newMessages[assistantMessageIndex].content + parsed.token,
+                  };
+                  return newMessages;
+                });
+              }
+            } catch (e) {
+              console.error('Error parsing SSE data:', e);
+            }
+          }
+        }
       }
     } catch (err) {
       console.error('Voice processing error:', err);
       alert('Failed to process voice');
-    } finally {
       setIsProcessing(false);
+      setIsPlaying(false);
     }
   };
 
   const playResponse = async (text: string) => {
-    setIsPlaying(true);
-
     try {
-      // Get TTS stream from ElevenLabs
-      const response = await fetch(`/api/voice/stream?text=${encodeURIComponent(text)}`);
+      // Get TTS audio from ElevenLabs
+      const response = await fetch('/api/elevenlabs/tts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text }),
+      });
 
       if (!response.ok) {
         throw new Error('TTS failed');
