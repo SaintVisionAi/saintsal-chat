@@ -39,12 +39,17 @@ export default function SplashPage() {
       <div className={`splash-content ${isLoaded ? 'loaded' : ''}`}>
         {/* Logo Container - Centered Animation */}
         <div className="splash-logo-container">
-          {/* Placeholder for user's animated logo */}
+          {/* Animated Logo */}
           <div className="splash-logo-wrapper">
-            {/* This will be replaced with user's animation file */}
-            <div className="splash-logo-placeholder">
-              <Sparkles className="splash-icon" size={80} />
-            </div>
+            <video
+              className="splash-logo-video"
+              autoPlay
+              loop
+              muted
+              playsInline
+            >
+              <source src="https://files.catbox.moe/xhdqj9.mp4" type="video/mp4" />
+            </video>
           </div>
 
           <h1 className="splash-title">

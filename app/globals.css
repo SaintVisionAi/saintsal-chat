@@ -3652,6 +3652,23 @@ body {
   margin-bottom: 24px;
 }
 
+.splash-logo-video {
+  width: 240px;
+  height: 240px;
+  object-fit: contain;
+  filter: drop-shadow(0 0 30px rgba(255, 213, 74, 0.3));
+  animation: floatLogo 4s ease-in-out infinite;
+}
+
+@keyframes floatLogo {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
 .splash-logo-placeholder {
   width: 160px;
   height: 160px;
@@ -4006,6 +4023,11 @@ body {
 @media (max-width: 768px) {
   .splash-title {
     font-size: 40px;
+  }
+
+  .splash-logo-video {
+    width: 180px;
+    height: 180px;
   }
 
   .splash-features {
