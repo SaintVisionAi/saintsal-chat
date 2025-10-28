@@ -80,6 +80,35 @@ body {
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+.sidebar-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 20px 16px;
+  border-bottom: 1px solid var(--glass-border);
+}
+
+.sidebar-logo {
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+  filter: drop-shadow(0 0 8px rgba(255, 213, 74, 0.3));
+}
+
+.sidebar-brand-text {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin: 0;
+  letter-spacing: -0.5px;
+}
+
+.trademark-small {
+  font-size: 12px;
+  color: var(--gold);
+  vertical-align: super;
+}
+
 .sidebar-header {
   display: flex;
   align-items: center;

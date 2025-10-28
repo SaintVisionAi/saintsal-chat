@@ -3,23 +3,23 @@ import './globals.css';
 import React from 'react';
 
 export const metadata = {
-  title: 'SaintSal Chat - Divine AI Co-Founder',
-  description: 'SaintSal™ — Your faith-driven AI co-founder with multi-LLM orchestration, RAG, and voice',
+  title: 'SaintSal™ - IQ 157 Intelligence Platform',
+  description: 'SaintSal™ — IQ 157 Intelligence Platform with multi-model AI, voice integration, and enterprise tools',
   icons: {
-    icon: 'https://i.imgur.com/ganVqpV.png',
-    shortcut: 'https://i.imgur.com/ganVqpV.png',
-    apple: 'https://i.imgur.com/ganVqpV.png',
+    icon: 'https://files.catbox.moe/c0zaok.png',
+    shortcut: 'https://files.catbox.moe/c0zaok.png',
+    apple: 'https://files.catbox.moe/c0zaok.png',
   },
   openGraph: {
-    title: 'SaintSal Chat - Divine AI Co-Founder',
-    description: 'AI platform with ChatGPT/Claude level capabilities + GoHighLevel, Google, Microsoft integrations',
-    images: ['https://i.imgur.com/ganVqpV.png'],
+    title: 'SaintSal™ - IQ 157 Intelligence Platform',
+    description: 'AI platform with multi-model intelligence, real-time streaming, voice integration, and enterprise-grade security',
+    images: ['https://files.catbox.moe/c0zaok.png'],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'SaintSal Chat',
-    description: 'Divine AI Co-Founder Platform',
-    images: ['https://i.imgur.com/ganVqpV.png'],
+    title: 'SaintSal™ - IQ 157 Intelligence Platform',
+    description: 'Multi-Model AI Intelligence Platform',
+    images: ['https://files.catbox.moe/c0zaok.png'],
   },
 };
 

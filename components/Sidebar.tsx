@@ -88,6 +88,18 @@ export default function Sidebar({
 
   return (
     <div className="sidebar">
+      {/* Brand Logo */}
+      <div className="sidebar-brand">
+        <img
+          src="https://files.catbox.moe/c0zaok.png"
+          alt="SaintSal"
+          className="sidebar-logo"
+        />
+        <h2 className="sidebar-brand-text">
+          SaintSal<span className="trademark-small">™</span>
+        </h2>
+      </div>
+
       <div className="sidebar-header">
         <button className="new-chat-btn" onClick={onNewChat}>
           <Plus size={18} />
