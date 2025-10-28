@@ -73,10 +73,9 @@ export async function POST(req: Request) {
         max_tokens: 900
       });
 
-      // Many SDKs put the text in completion.choices[0].message.content
+      // Extract response from OpenAI completion
       assistantText =
-        completion?.choices?.[0]?.message?.content ??
-        (completion?.choices?.[0]?.text ?? assistantText);
+        completion?.choices?.[0]?.message?.content ?? assistantText;
     } catch (err) {
       console.error("OpenAI error:", err);
       assistantText = "SaintSal is temporarily unavailable (LLM error).";
