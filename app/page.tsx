@@ -1,7 +1,7 @@
 'use client';
 import React, { useState } from 'react';
 import Sidebar from '../components/Sidebar';
-import ChatWindow from '../components/ChatWindow';
+import ChatWindowEnhanced from '../components/ChatWindowEnhanced';
 
 export default function Page() {
   const [currentChatId, setCurrentChatId] = useState<string>('1');
@@ -22,7 +22,7 @@ export default function Page() {
         onSelectChat={handleSelectChat}
         currentChatId={currentChatId}
       />
-      <ChatWindow chatId={currentChatId} />
+      <ChatWindowEnhanced chatId={currentChatId} />
     </div>
   );
 }
