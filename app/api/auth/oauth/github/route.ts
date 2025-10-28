@@ -1,27 +1,15 @@
 /**
  * app/api/auth/oauth/github/route.ts
- * GitHub OAuth - Initiate authentication
+ * GitHub App OAuth - Initiate authentication
+ * Using SaintSal-Agent-Godfirst-Cookin GitHub App
  */
 import { NextRequest, NextResponse } from "next/server";
 
-const GITHUB_CLIENT_ID = process.env.GITHUB_CLIENT_ID || process.env.NEXT_PUBLIC_GITHUB_CLIENT_ID;
-const REDIRECT_URI = process.env.NEXT_PUBLIC_APP_URL
-  ? `${process.env.NEXT_PUBLIC_APP_URL}/api/auth/oauth/github/callback`
-  : "http://localhost:3000/api/auth/oauth/github/callback";
+// Your GitHub App Client ID
+const GITHUB_CLIENT_ID = process.env.GITHUB_CLIENT_ID || "Iv23limGcQY8OVviNoBV";
+const REDIRECT_URI = process.env.GITHUB_CALLBACK_URL || "https://cookinknowledge.com/api/github/callback";
 
 export async function GET(req: NextRequest) {
-  if (!GITHUB_CLIENT_ID) {
-    return NextResponse.json({
-      error: "GitHub OAuth not configured",
-      instructions: [
-        "1. Go to https://github.com/settings/developers",
-        "2. Create a new OAuth App",
-        "3. Set callback URL to: " + REDIRECT_URI,
-        "4. Add GITHUB_CLIENT_ID and GITHUB_CLIENT_SECRET to .env.local",
-      ],
-    }, { status: 503 });
-  }
-
   // GitHub OAuth scopes for repo access
   const scopes = [
     "repo",           // Full control of private repositories
