@@ -62,12 +62,26 @@ export async function POST(req: Request) {
       { status: 201 }
     );
 
-    // Set cookie
-    response.cookies.set("saintsal_session", result.insertedId.toString(), {
+    // Set auth cookies
+    response.cookies.set("saintsal_auth", result.insertedId.toString(), {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
       maxAge: 60 * 60 * 24 * 30, // 30 days
+    });
+
+    response.cookies.set("saintsal_user_email", email.toLowerCase(), {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 60 * 60 * 24 * 30, // 30 days
+    });
+
+    response.cookies.set("saintsal_first_time", "true", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 60 * 5, // 5 minutes - just for onboarding flow
     });
 
     return response;

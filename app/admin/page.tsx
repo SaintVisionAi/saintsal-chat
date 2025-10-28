@@ -38,6 +38,13 @@ export default function AdminDashboard() {
   const [users, setUsers] = useState<User[]>([]);
   const [activeTab, setActiveTab] = useState<'dashboard' | 'users' | 'packages'>('dashboard');
 
+  // Add User Modal State
+  const [showAddUserModal, setShowAddUserModal] = useState(false);
+  const [newUserName, setNewUserName] = useState('');
+  const [newUserEmail, setNewUserEmail] = useState('');
+  const [newUserPlan, setNewUserPlan] = useState('free');
+  const [addingUser, setAddingUser] = useState(false);
+
   useEffect(() => {
     checkAuth();
   }, []);
@@ -101,6 +108,63 @@ export default function AdminDashboard() {
       }
     } catch (err) {
       console.error('Failed to load dashboard:', err);
+    }
+  };
+
+  const handleAddUser = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAddingUser(true);
+
+    try {
+      const response = await fetch('/api/admin/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: newUserName,
+          email: newUserEmail,
+          plan: newUserPlan,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        alert('User added successfully!');
+        setShowAddUserModal(false);
+        setNewUserName('');
+        setNewUserEmail('');
+        setNewUserPlan('free');
+        loadDashboard(); // Reload users
+      } else {
+        alert(data.error || 'Failed to add user');
+      }
+    } catch (err) {
+      alert('Failed to add user');
+    } finally {
+      setAddingUser(false);
+    }
+  };
+
+  const handleDeleteUser = async (userId: string) => {
+    if (!confirm('Are you sure you want to delete this user?')) return;
+
+    try {
+      const response = await fetch('/api/admin/users', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        alert('User deleted successfully!');
+        loadDashboard(); // Reload users
+      } else {
+        alert(data.error || 'Failed to delete user');
+      }
+    } catch (err) {
+      alert('Failed to delete user');
     }
   };
 
@@ -276,7 +340,7 @@ export default function AdminDashboard() {
           <div className="admin-users-section">
             <div className="admin-section-header">
               <h2 className="admin-section-title">User Management</h2>
-              <button className="admin-add-btn">
+              <button className="admin-add-btn" onClick={() => setShowAddUserModal(true)}>
                 <Plus size={18} />
                 <span>Add User</span>
               </button>
@@ -304,10 +368,14 @@ export default function AdminDashboard() {
                       <td>{new Date(user.createdAt).toLocaleDateString()}</td>
                       <td>
                         <div className="admin-actions">
-                          <button className="admin-action-btn edit">
+                          <button className="admin-action-btn edit" title="Edit user">
                             <Edit size={16} />
                           </button>
-                          <button className="admin-action-btn delete">
+                          <button
+                            className="admin-action-btn delete"
+                            onClick={() => handleDeleteUser(user._id)}
+                            title="Delete user"
+                          >
                             <Trash2 size={16} />
                           </button>
                         </div>
@@ -376,6 +444,80 @@ export default function AdminDashboard() {
           </div>
         )}
       </div>
+
+      {/* Add User Modal */}
+      {showAddUserModal && (
+        <div className="modal-overlay" onClick={() => setShowAddUserModal(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3 className="modal-title">Add New User</h3>
+              <button
+                className="modal-close"
+                onClick={() => setShowAddUserModal(false)}
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleAddUser} className="modal-form">
+              <div className="form-group">
+                <label className="form-label">Name</label>
+                <input
+                  type="text"
+                  className="form-input"
+                  value={newUserName}
+                  onChange={(e) => setNewUserName(e.target.value)}
+                  placeholder="John Doe"
+                  required
+                />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Email</label>
+                <input
+                  type="email"
+                  className="form-input"
+                  value={newUserEmail}
+                  onChange={(e) => setNewUserEmail(e.target.value)}
+                  placeholder="john@example.com"
+                  required
+                />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Plan</label>
+                <select
+                  className="form-input"
+                  value={newUserPlan}
+                  onChange={(e) => setNewUserPlan(e.target.value)}
+                >
+                  <option value="free">Free</option>
+                  <option value="pro">Pro</option>
+                  <option value="enterprise">Enterprise</option>
+                </select>
+              </div>
+
+              <div className="modal-actions">
+                <button
+                  type="button"
+                  className="modal-btn cancel"
+                  onClick={() => setShowAddUserModal(false)}
+                  disabled={addingUser}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="modal-btn submit"
+                  disabled={addingUser}
+                >
+                  {addingUser ? 'Adding...' : 'Add User'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
