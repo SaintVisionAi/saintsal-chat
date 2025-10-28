@@ -1,13 +1,13 @@
 /**
  * app/api/auth/oauth/github/route.ts
  * GitHub App OAuth - Initiate authentication
- * Using SaintSal-Agent-Godfirst-Cookin GitHub App
+ * Using SaintSal-Agent-Cookin-Chat GitHub App
  */
 import { NextRequest, NextResponse } from "next/server";
 
 // Your GitHub App Client ID
 const GITHUB_CLIENT_ID = process.env.GITHUB_CLIENT_ID || "Iv23limGcQY8OVviNoBV";
-const REDIRECT_URI = process.env.GITHUB_CALLBACK_URL || "https://cookinknowledge.com/api/github/callback";
+const REDIRECT_URI = process.env.GITHUB_CALLBACK_URL || "https://saintsal.ai/api/github/callback";
 
 export async function GET(req: NextRequest) {
   // GitHub OAuth scopes for repo access
