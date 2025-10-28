@@ -186,14 +186,19 @@ export default function PricingPage() {
               <h3 className="text-2xl font-semibold text-white mb-8">
                 Or Choose Your Plan with <span className="text-gradient-yellow">Stripe</span>
               </h3>
-              <div className="max-w-5xl mx-auto bg-white/5 rounded-2xl p-8 border border-white/10">
-                <script async src="https://js.stripe.com/v3/pricing-table.js"></script>
-                <stripe-pricing-table
-                  pricing-table-id="prctbl_1SIQItGVzsQbCDmmZ97ubwpM"
-                  publishable-key="pk_live_51SGbmHGVzsQbCDmmc3GGBQKTrxEWfXJBw2wCZqPNJITuNcZdBI8uQa04BkWxBloqDq2fJmKuF2Z5o4MFO0o7uAJU009bQ0K6pw"
-                >
-                </stripe-pricing-table>
-              </div>
+              <div
+                className="max-w-5xl mx-auto bg-white/5 rounded-2xl p-8 border border-white/10"
+                dangerouslySetInnerHTML={{
+                  __html: `
+                    <script async src="https://js.stripe.com/v3/pricing-table.js"></script>
+                    <stripe-pricing-table
+                      pricing-table-id="prctbl_1SIQItGVzsQbCDmmZ97ubwpM"
+                      publishable-key="pk_live_51SGbmHGVzsQbCDmmc3GGBQKTrxEWfXJBw2wCZqPNJITuNcZdBI8uQa04BkWxBloqDq2fJmKuF2Z5o4MFO0o7uAJU009bQ0K6pw"
+                    >
+                    </stripe-pricing-table>
+                  `
+                }}
+              />
             </div>
           </div>
         </section>
