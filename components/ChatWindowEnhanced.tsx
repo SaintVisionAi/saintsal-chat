@@ -171,7 +171,38 @@ export default function ChatWindowEnhanced({ chatId }: ChatWindowProps) {
     }
   };
 
-  // Check for code generation commands
+  // Check for special tool commands
+  const checkForImageCommand = (text: string): boolean => {
+    const imageKeywords = [
+      'generate an image',
+      'create an image',
+      'make an image',
+      'draw an image',
+      'generate image of',
+    ];
+    return imageKeywords.some((keyword) =>
+      text.toLowerCase().includes(keyword)
+    );
+  };
+
+  const checkForSearchCommand = (text: string): boolean => {
+    const searchKeywords = [
+      'search the web',
+      'search for',
+      'google',
+      'find information about',
+      'look up',
+    ];
+    return searchKeywords.some((keyword) =>
+      text.toLowerCase().includes(keyword)
+    );
+  };
+
+  const checkForGitHubCommand = (text: string): boolean => {
+    return text.toLowerCase().includes('github.com') ||
+           text.toLowerCase().includes('analyze repo');
+  };
+
   const checkForCodeCommand = (text: string): boolean => {
     const codeKeywords = [
       '/code',
@@ -183,6 +214,51 @@ export default function ChatWindowEnhanced({ chatId }: ChatWindowProps) {
     return codeKeywords.some((keyword) =>
       text.toLowerCase().includes(keyword)
     );
+  };
+
+  // Handle tool calls
+  const handleImageGeneration = async (prompt: string): Promise<string> => {
+    try {
+      const response = await fetch('/api/tools/image', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        return `I've generated an image for you!\n\n![Generated Image](${data.imageUrl})\n\n**Revised Prompt:** ${data.revisedPrompt}`;
+      } else {
+        return `Sorry, I couldn't generate the image: ${data.error}`;
+      }
+    } catch (error) {
+      return 'Sorry, image generation failed. Please try again.';
+    }
+  };
+
+  const handleWebSearch = async (query: string): Promise<string> => {
+    try {
+      const response = await fetch('/api/tools/search', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        let result = `I found these results for "${query}":\n\n`;
+        data.results.forEach((item: any, i: number) => {
+          result += `${i + 1}. **${item.title}**\n   ${item.snippet}\n   [${item.link}](${item.link})\n\n`;
+        });
+        return result;
+      } else {
+        return `Web search unavailable: ${data.error}`;
+      }
+    } catch (error) {
+      return 'Sorry, web search failed. Please try again.';
+    }
   };
 
   // 🔥 STREAMING CHAT FUNCTION
@@ -199,6 +275,35 @@ export default function ChatWindowEnhanced({ chatId }: ChatWindowProps) {
     setMessages((m) => [...m, userMessage]);
     setInput('');
     setIsStreaming(true);
+
+    // Check for tool commands and handle them
+    if (checkForImageCommand(userText)) {
+      const result = await handleImageGeneration(userText);
+      setMessages((m) => [
+        ...m,
+        {
+          role: 'assistant',
+          text: result,
+          timestamp: new Date(),
+        },
+      ]);
+      setIsStreaming(false);
+      return;
+    }
+
+    if (checkForSearchCommand(userText)) {
+      const result = await handleWebSearch(userText);
+      setMessages((m) => [
+        ...m,
+        {
+          role: 'assistant',
+          text: result,
+          timestamp: new Date(),
+        },
+      ]);
+      setIsStreaming(false);
+      return;
+    }
 
     // Create placeholder for assistant message
     const assistantMessageIndex = messages.length + 1;
