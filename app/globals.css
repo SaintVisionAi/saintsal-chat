@@ -2719,6 +2719,71 @@ body {
   font-size: 13px;
 }
 
+/* Voice Visualizer - Pulsating Wave Animation */
+.voice-visualizer {
+  position: absolute;
+  width: 240px;
+  height: 240px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.voice-wave-container {
+  position: relative;
+  width: 200px;
+  height: 200px;
+}
+
+.voice-bar {
+  position: absolute;
+  width: 4px;
+  height: 40px;
+  top: 50%;
+  left: 50%;
+  margin-left: -2px;
+  margin-top: -60px;
+  border-radius: 2px;
+  transform-origin: center 60px;
+  animation: voice-pulse-wave 1.5s ease-in-out infinite;
+  opacity: 0.8;
+}
+
+@keyframes voice-pulse-wave {
+  0%, 100% {
+    height: 20px;
+    opacity: 0.4;
+    margin-top: -50px;
+  }
+  50% {
+    height: 60px;
+    opacity: 1;
+    margin-top: -70px;
+  }
+}
+
+.voice-pulse {
+  position: absolute;
+  width: 100px;
+  height: 100px;
+  border: 3px solid;
+  border-radius: 50%;
+  animation: voice-pulse-ring 2s ease-in-out infinite;
+}
+
+@keyframes voice-pulse-ring {
+  0%, 100% {
+    transform: scale(0.8);
+    opacity: 0.8;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 0.3;
+  }
+}
+
 /* Mobile optimizations */
 @media (max-width: 768px) {
   .walkie-talkie-container {
@@ -2748,5 +2813,15 @@ body {
   .level-ring.ring-3 {
     width: 240px;
     height: 240px;
+  }
+
+  .voice-visualizer {
+    width: 200px;
+    height: 200px;
+  }
+
+  .voice-wave-container {
+    width: 160px;
+    height: 160px;
   }
 }

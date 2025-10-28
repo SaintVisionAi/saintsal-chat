@@ -1,6 +1,7 @@
 'use client';
 import React, { useState, useRef, useEffect } from 'react';
 import { Mic, Volume2, Loader2, Radio } from 'lucide-react';
+import VoiceVisualizer from './VoiceVisualizer';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -253,6 +254,12 @@ export default function WalkieTalkie() {
 
       {/* Walkie Talkie Button */}
       <div className="walkie-talkie-button-container">
+        {/* Voice Visualizer - Pulsating Wave Animation */}
+        <VoiceVisualizer
+          isActive={isRecording || isProcessing || isPlaying}
+          type={isRecording ? 'recording' : isPlaying ? 'listening' : 'processing'}
+        />
+
         {/* Audio Level Visualization */}
         {isRecording && (
           <div className="audio-level-ring" style={{ opacity: audioLevel }}>
