@@ -7,11 +7,12 @@ import { createClient } from "@supabase/supabase-js";
 const url = process.env.SUPABASE_URL;
 const anon = process.env.SUPABASE_ANON_KEY;
 
+// Create a dummy client if env vars are not set (for builds without Supabase)
+const dummyUrl = "https://placeholder.supabase.co";
+const dummyKey = "placeholder-key";
+
 if (!url || !anon) {
-  // If you intend to only call Supabase server-side with service_role key,
-  // swap to process.env.SUPABASE_SERVICE_ROLE_KEY below.
-  // We'll still throw early so it's obvious to set envs.
-  console.warn("Warning: SUPABASE_URL or SUPABASE_ANON_KEY not set");
+  console.warn("Warning: SUPABASE_URL or SUPABASE_ANON_KEY not set - using placeholder client");
 }
 
-export const supabase = createClient(url ?? "", anon ?? "");
+export const supabase = createClient(url || dummyUrl, anon || dummyKey);

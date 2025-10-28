@@ -2,6 +2,9 @@
 node_modules/
 package-lock.json
 
+# Temporary/test directories
+_my-mongodb-app/
+
 # Environment variables - NEVER COMMIT THESE!
 .env
 .env.local
