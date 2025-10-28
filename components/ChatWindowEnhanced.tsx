@@ -1,7 +1,18 @@
 'use client';
 import React, { useState, useEffect, useRef } from 'react';
-import { Send, Paperclip, Mic, Volume2, Code2, StopCircle } from 'lucide-react';
-import Image from 'next/image';
+import {
+  Send,
+  Paperclip,
+  Mic,
+  Volume2,
+  Code2,
+  StopCircle,
+  Image as ImageIcon,
+  Globe,
+  Sparkles,
+  Calculator,
+  Database
+} from 'lucide-react';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -42,6 +53,12 @@ export default function ChatWindowEnhanced({ chatId }: ChatWindowProps) {
       textareaRef.current.style.height = textareaRef.current.scrollHeight + 'px';
     }
   }, [input]);
+
+  // Clear messages when chatId changes (New Chat functionality)
+  useEffect(() => {
+    setMessages([]);
+    setInput('');
+  }, [chatId]);
 
   // File Upload Handler
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -154,7 +171,38 @@ export default function ChatWindowEnhanced({ chatId }: ChatWindowProps) {
     }
   };
 
-  // Check for code generation commands
+  // Check for special tool commands
+  const checkForImageCommand = (text: string): boolean => {
+    const imageKeywords = [
+      'generate an image',
+      'create an image',
+      'make an image',
+      'draw an image',
+      'generate image of',
+    ];
+    return imageKeywords.some((keyword) =>
+      text.toLowerCase().includes(keyword)
+    );
+  };
+
+  const checkForSearchCommand = (text: string): boolean => {
+    const searchKeywords = [
+      'search the web',
+      'search for',
+      'google',
+      'find information about',
+      'look up',
+    ];
+    return searchKeywords.some((keyword) =>
+      text.toLowerCase().includes(keyword)
+    );
+  };
+
+  const checkForGitHubCommand = (text: string): boolean => {
+    return text.toLowerCase().includes('github.com') ||
+           text.toLowerCase().includes('analyze repo');
+  };
+
   const checkForCodeCommand = (text: string): boolean => {
     const codeKeywords = [
       '/code',
@@ -166,6 +214,51 @@ export default function ChatWindowEnhanced({ chatId }: ChatWindowProps) {
     return codeKeywords.some((keyword) =>
       text.toLowerCase().includes(keyword)
     );
+  };
+
+  // Handle tool calls
+  const handleImageGeneration = async (prompt: string): Promise<string> => {
+    try {
+      const response = await fetch('/api/tools/image', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        return `I've generated an image for you!\n\n![Generated Image](${data.imageUrl})\n\n**Revised Prompt:** ${data.revisedPrompt}`;
+      } else {
+        return `Sorry, I couldn't generate the image: ${data.error}`;
+      }
+    } catch (error) {
+      return 'Sorry, image generation failed. Please try again.';
+    }
+  };
+
+  const handleWebSearch = async (query: string): Promise<string> => {
+    try {
+      const response = await fetch('/api/tools/search', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        let result = `I found these results for "${query}":\n\n`;
+        data.results.forEach((item: any, i: number) => {
+          result += `${i + 1}. **${item.title}**\n   ${item.snippet}\n   [${item.link}](${item.link})\n\n`;
+        });
+        return result;
+      } else {
+        return `Web search unavailable: ${data.error}`;
+      }
+    } catch (error) {
+      return 'Sorry, web search failed. Please try again.';
+    }
   };
 
   // 🔥 STREAMING CHAT FUNCTION
@@ -182,6 +275,35 @@ export default function ChatWindowEnhanced({ chatId }: ChatWindowProps) {
     setMessages((m) => [...m, userMessage]);
     setInput('');
     setIsStreaming(true);
+
+    // Check for tool commands and handle them
+    if (checkForImageCommand(userText)) {
+      const result = await handleImageGeneration(userText);
+      setMessages((m) => [
+        ...m,
+        {
+          role: 'assistant',
+          text: result,
+          timestamp: new Date(),
+        },
+      ]);
+      setIsStreaming(false);
+      return;
+    }
+
+    if (checkForSearchCommand(userText)) {
+      const result = await handleWebSearch(userText);
+      setMessages((m) => [
+        ...m,
+        {
+          role: 'assistant',
+          text: result,
+          timestamp: new Date(),
+        },
+      ]);
+      setIsStreaming(false);
+      return;
+    }
 
     // Create placeholder for assistant message
     const assistantMessageIndex = messages.length + 1;
@@ -325,7 +447,7 @@ export default function ChatWindowEnhanced({ chatId }: ChatWindowProps) {
       <div className="messages-container">
         {messages.length === 0 ? (
           <div className="welcome-screen">
-            <Image
+            <img
               src="https://i.imgur.com/ganVqpV.png"
               alt="SaintSal Logo"
               width={120}
@@ -422,6 +544,58 @@ export default function ChatWindowEnhanced({ chatId }: ChatWindowProps) {
 
       {/* Input Area */}
       <div className="chat-input-container">
+        {/* Tools Bar */}
+        <div className="chat-tools-bar">
+          <button
+            className="tool-btn"
+            onClick={() => setInput('/code ')}
+            title="Code Generation"
+          >
+            <Code2 size={16} />
+            <span>Code</span>
+          </button>
+          <button
+            className="tool-btn"
+            onClick={() => setInput('Generate an image of ')}
+            title="Image Generation"
+          >
+            <ImageIcon size={16} />
+            <span>Image</span>
+          </button>
+          <button
+            className="tool-btn"
+            onClick={() => setInput('Search the web for ')}
+            title="Web Search"
+          >
+            <Globe size={16} />
+            <span>Search</span>
+          </button>
+          <button
+            className="tool-btn"
+            onClick={() => setInput('Analyze data: ')}
+            title="Data Analysis"
+          >
+            <Database size={16} />
+            <span>Data</span>
+          </button>
+          <button
+            className="tool-btn"
+            onClick={() => setInput('Calculate: ')}
+            title="Calculator"
+          >
+            <Calculator size={16} />
+            <span>Calculate</span>
+          </button>
+          <button
+            className="tool-btn"
+            onClick={() => setInput('Create ')}
+            title="AI Assistant"
+          >
+            <Sparkles size={16} />
+            <span>Create</span>
+          </button>
+        </div>
+
         <div className="chat-input-wrapper">
           <input
             ref={fileInputRef}

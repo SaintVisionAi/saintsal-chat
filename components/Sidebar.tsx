@@ -19,13 +19,23 @@ interface Chat {
   timestamp: Date;
 }
 
+type ViewType = 'chat' | 'playground' | 'walkie' | 'compare';
+
 interface SidebarProps {
   onNewChat: () => void;
   onSelectChat: (chatId: string) => void;
+  onViewChange: (view: ViewType) => void;
   currentChatId?: string;
+  currentView?: ViewType;
 }
 
-export default function Sidebar({ onNewChat, onSelectChat, currentChatId }: SidebarProps) {
+export default function Sidebar({
+  onNewChat,
+  onSelectChat,
+  onViewChange,
+  currentChatId,
+  currentView = 'chat'
+}: SidebarProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [activeTab, setActiveTab] = useState<'chats' | 'files' | 'artifacts' | 'code'>('chats');
 
@@ -35,10 +45,29 @@ export default function Sidebar({ onNewChat, onSelectChat, currentChatId }: Side
   ]);
 
   const tools = [
-    { name: 'Code Agent', icon: Code2 },
-    { name: 'Voice (ElevenLabs)', icon: Mic },
-    { name: 'Search', icon: FileText },
-    { name: 'Calculator', icon: Wrench },
+    {
+      name: 'Code Agent',
+      icon: Code2,
+      action: () => {
+        onViewChange('chat');
+        // Trigger will be handled by parent component
+      }
+    },
+    {
+      name: 'Voice Assistant',
+      icon: Mic,
+      action: () => onViewChange('walkie')
+    },
+    {
+      name: 'Model Playground',
+      icon: FileText,
+      action: () => onViewChange('playground')
+    },
+    {
+      name: 'Compare Models',
+      icon: Wrench,
+      action: () => onViewChange('compare')
+    },
   ];
 
   if (isCollapsed) {
@@ -69,6 +98,38 @@ export default function Sidebar({ onNewChat, onSelectChat, currentChatId }: Side
           onClick={() => setIsCollapsed(true)}
         >
           <ChevronLeft size={20} />
+        </button>
+      </div>
+
+      {/* View Navigation */}
+      <div className="sidebar-views">
+        <button
+          className={`view-btn ${currentView === 'chat' ? 'active' : ''}`}
+          onClick={() => onViewChange('chat')}
+        >
+          <MessageSquare size={16} />
+          <span>Chat</span>
+        </button>
+        <button
+          className={`view-btn ${currentView === 'playground' ? 'active' : ''}`}
+          onClick={() => onViewChange('playground')}
+        >
+          <Code2 size={16} />
+          <span>Playground</span>
+        </button>
+        <button
+          className={`view-btn ${currentView === 'walkie' ? 'active' : ''}`}
+          onClick={() => onViewChange('walkie')}
+        >
+          <Mic size={16} />
+          <span>Walkie Talkie</span>
+        </button>
+        <button
+          className={`view-btn ${currentView === 'compare' ? 'active' : ''}`}
+          onClick={() => onViewChange('compare')}
+        >
+          <Box size={16} />
+          <span>Compare Models</span>
         </button>
       </div>
 
@@ -142,10 +203,14 @@ export default function Sidebar({ onNewChat, onSelectChat, currentChatId }: Side
 
       {/* Tools Section */}
       <div className="sidebar-tools">
-        <div className="tools-header">Tools</div>
+        <div className="tools-header">Quick Tools</div>
         <div className="tools-list">
           {tools.map((tool) => (
-            <button key={tool.name} className="tool-item">
+            <button
+              key={tool.name}
+              className="tool-item"
+              onClick={tool.action}
+            >
               <tool.icon size={16} />
               <span>{tool.name}</span>
             </button>
@@ -153,8 +218,31 @@ export default function Sidebar({ onNewChat, onSelectChat, currentChatId }: Side
         </div>
       </div>
 
-      {/* Console Link */}
+      {/* Integrations Section */}
+      <div className="sidebar-integrations">
+        <div className="integrations-header">Integrations</div>
+        <div className="integrations-list">
+          <a href="/api/auth/oauth/github" className="integration-btn github">
+            <Code2 size={16} />
+            <span>Connect GitHub</span>
+          </a>
+          <button className="integration-btn google" onClick={() => alert('Google OAuth coming soon!')}>
+            <FileText size={16} />
+            <span>Connect Google</span>
+          </button>
+          <button className="integration-btn microsoft" onClick={() => alert('Microsoft OAuth coming soon!')}>
+            <Wrench size={16} />
+            <span>Connect Microsoft</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Footer Links */}
       <div className="sidebar-footer">
+        <a href="/admin" className="console-link">
+          <Terminal size={16} />
+          <span>Admin Dashboard</span>
+        </a>
         <a href="https://cookin.io" target="_blank" rel="noopener noreferrer" className="console-link">
           <Terminal size={16} />
           <span>Open Console</span>
