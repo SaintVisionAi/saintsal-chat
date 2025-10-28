@@ -1,60 +1,32 @@
-import type { Metadata } from 'next'
-import { Inter } from 'next/font/google'
-import './globals.css'
+/* app/layout.tsx - Root layout for SaintSal Chat */
+import './globals.css';
+import React from 'react';
 
-const inter = Inter({ subsets: ['latin'] })
+export const metadata = {
+  title: 'SAINTSAL Chat',
+  description: 'SaintSal™ — Divine Chat',
+};
 
-export const metadata: Metadata = {
-  title: 'SaintVision AI™ | Enterprise AI Intelligence Platform',
-  description: 'The first AI platform that thinks, learns, and evolves with your business. Deploy enterprise-grade AI agents in minutes with patented HACP™ technology.',
-  keywords: 'AI, artificial intelligence, enterprise AI, HACP protocol, responsible AI, business intelligence, automation',
-  authors: [{ name: 'SaintVision AI' }],
-  creator: 'SaintVision AI',
-  publisher: 'SaintVision AI',
-  robots: 'index, follow',
-  openGraph: {
-    type: 'website',
-    locale: 'en_US',
-    url: 'https://saintvisionai.com',
-    title: 'SaintVision AI™ | Enterprise AI Intelligence Platform',
-    description: 'The first AI platform that thinks, learns, and evolves with your business.',
-    siteName: 'SaintVision AI',
-    images: [
-      {
-        url: '/logos/THE BEST MAIN LOGO + COOKIN.png',
-        width: 1200,
-        height: 630,
-        alt: 'SaintVision AI Enterprise Platform'
-      }
-    ]
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'SaintVision AI™ | Enterprise AI Intelligence Platform',
-    description: 'The first AI platform that thinks, learns, and evolves with your business.',
-    images: ['/logos/THE BEST MAIN LOGO + COOKIN.png']
-  },
-  viewport: 'width=device-width, initial-scale=1',
-  themeColor: '#F59E0B'
-}
-
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <head>
-        <link rel="icon" href="/logos/SVTLOGO.png" />
-        <link rel="apple-touch-icon" href="/logos/SVTLOGO.png" />
-        <meta name="theme-color" content="#F59E0B" />
-      </head>
-      <body className={inter.className}>
-        <div className="min-h-screen bg-black text-white">
-          {children}
+      <body>
+        <div className="app-shell">
+          <div className="chat-card">
+            <div className="chat-top">
+              <div className="brand">
+                <div className="logo" />
+                <div>
+                  <div style={{ fontWeight: 800, letterSpacing: 0.6 }}>SAINTSAL</div>
+                  <div style={{ fontSize: 12, opacity: 0.6 }}>Divine AI Chat</div>
+                </div>
+              </div>
+            </div>
+
+            {children}
+          </div>
         </div>
       </body>
     </html>
-  )
+  );
 }

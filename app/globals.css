@@ -1,153 +1,128 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+/* app/globals.css - deep charcoal + wet gold look */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap');
 
-/* SAINTVISION AI™ ENTERPRISE DESIGN SYSTEM */
-
-@layer base {
-  * {
-    @apply border-white/10;
-  }
-  
-  body {
-    @apply bg-black text-white font-sans;
-    font-feature-settings: "rlig" 1, "calt" 1;
-  }
-  
-  html {
-    scroll-behavior: smooth;
-  }
+:root{
+  --charcoal: #0b0d0f;
+  --charcoal-2: #0f1113;
+  --gold: #FFD54A;
+  --gold-2: #E4B83B;
+  --glass: rgba(255,255,255,0.04);
 }
 
-@layer components {
-  /* Glass Morphism Components */
-  .glass {
-    @apply bg-white/5 backdrop-blur-xl border border-white/10;
-  }
-  
-  .glass-yellow {
-    @apply bg-saint-yellow-500/10 backdrop-blur-xl border border-saint-yellow-500/20;
-  }
-  
-  .glass-blue {
-    @apply bg-saint-blue-500/10 backdrop-blur-xl border border-saint-blue-500/20;
-  }
-  
-  .glass-green {
-    @apply bg-green-500/10 backdrop-blur-xl border border-green-500/20;
-  }
-  
-  /* HACP™ Protocol Indicator */
-  .hacp-active {
-    @apply inline-flex items-center space-x-2 px-4 py-2 bg-saint-yellow-500/10 border border-saint-yellow-500/30 rounded-full;
-  }
-  
-  .hacp-dot {
-    @apply w-2 h-2 bg-saint-yellow-500 rounded-full animate-pulse;
-  }
-  
-  /* Enterprise Buttons */
-  .btn-primary {
-    @apply px-8 py-4 bg-gradient-to-r from-saint-yellow-500 to-saint-yellow-600 text-black font-bold rounded-lg hover:from-saint-yellow-400 hover:to-saint-yellow-500 transition-all duration-300 transform hover:scale-105;
-  }
-  
-  .btn-secondary {
-    @apply px-8 py-4 glass border border-white/20 rounded-lg text-white hover:bg-white/20 transition-all duration-300;
-  }
-  
-  .btn-outline {
-    @apply px-8 py-4 border border-saint-yellow-500/50 text-saint-yellow-500 rounded-lg hover:bg-saint-yellow-500/10 transition-all duration-300;
-  }
-  
-  /* Enterprise Cards */
-  .enterprise-card {
-    @apply glass rounded-2xl p-8 hover:bg-white/10 transition-all duration-300 transform hover:scale-105;
-  }
-  
-  /* Parallax Background */
-  .parallax-bg {
-    @apply absolute inset-0 z-0;
-  }
-  
-  .parallax-overlay {
-    @apply absolute inset-0 bg-black/40;
-  }
-  
-  /* Navigation */
-  .nav-link {
-    @apply text-gray-300 hover:text-white transition-colors duration-200 font-medium;
-  }
-  
-  /* Typography */
-  .heading-hero {
-    @apply text-5xl md:text-6xl lg:text-7xl font-normal mb-8;
-  }
-  
-  .heading-section {
-    @apply text-4xl md:text-5xl font-normal mb-8;
-  }
-  
-  .text-gradient-yellow {
-    @apply text-transparent bg-gradient-to-r from-saint-yellow-400 to-saint-yellow-600 bg-clip-text font-bold;
-  }
-  
-  /* Animations */
-  .animate-fade-in {
-    animation: fadeIn 0.6s ease-out;
-  }
-  
-  .animate-slide-up {
-    animation: slideUp 0.8s ease-out;
-  }
+html,body,#__next{height:100%}
+body{
+  margin:0;
+  background: linear-gradient(180deg, var(--charcoal-2) 0%, #060708 100%);
+  color:#ffffff;
+  font-family: 'Viewport', Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
 }
 
-/* Keyframe Animations */
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+.app-shell{
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:48px;
 }
 
-@keyframes slideUp {
-  from {
-    opacity: 0;
-    transform: translateY(30px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+.chat-card{
+  width: min(920px, 95vw);
+  background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+  border: 1px solid rgba(255, 213, 74, 0.06);
+  border-radius:20px;
+  box-shadow: 0 30px 80px rgba(0,0,0,0.7), inset 0 -6px 20px rgba(255,255,255,0.02);
+  overflow:hidden;
 }
 
-@layer utilities {
-  .text-balance {
-    text-wrap: balance;
-  }
+.chat-top{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  padding:18px 22px;
+  border-bottom:1px solid rgba(255,255,255,0.03);
+  background: linear-gradient(180deg, rgba(255,255,255,0.01), rgba(0,0,0,0.03));
 }
 
-/* Custom Scrollbar */
-::-webkit-scrollbar {
-  width: 8px;
+.brand{display:flex;align-items:center;gap:12px}
+.brand .logo{
+  width:44px;height:44px;border-radius:10px;
+  background: linear-gradient(135deg, var(--gold) 0%, var(--gold-2) 60%);
+  box-shadow: 0 6px 20px rgba(231,172,40,0.2), inset 0 -2px 10px rgba(255,255,255,0.08);
 }
 
-::-webkit-scrollbar-track {
-  @apply bg-saint-gray-900;
+.chat-body{
+  display:flex;
+  gap:20px;
+  padding:22px;
 }
 
-::-webkit-scrollbar-thumb {
-  @apply bg-saint-gray-700 rounded-lg;
+.messages{
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  gap:14px;
+  padding-right:12px;
+  max-height:65vh;
+  overflow:auto;
 }
 
-::-webkit-scrollbar-thumb:hover {
-  @apply bg-saint-gray-600;
+.message{
+  position:relative;
+  padding:12px 16px;
+  border-radius:14px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+  border:1px solid rgba(255,255,255,0.04);
+  box-shadow: 0 12px 28px rgba(0,0,0,0.6), inset 0 -2px 8px rgba(255,255,255,0.02);
+  backdrop-filter: blur(6px) saturate(120%);
 }
 
-/* Selection */
-::selection {
-  @apply bg-saint-yellow-500/20 text-saint-yellow-400;
+.message.assistant{
+  border: 1px solid rgba(255,213,74,0.12);
+  box-shadow: 0 16px 30px rgba(0,0,0,0.7), inset 0 -4px 10px rgba(255,255,255,0.02);
+}
+
+.message::after{
+  content: "";
+  position:absolute;
+  top:-6px;
+  left:-6px;
+  right:-6px;
+  height:28%;
+  background: linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.01));
+  border-radius:12px;
+  mix-blend-mode: overlay;
+  pointer-events:none;
+  filter:blur(1px);
+}
+
+.composer{
+  display:flex;
+  gap:12px;
+  padding:16px;
+  border-top:1px solid rgba(255,255,255,0.03);
+  align-items:center;
+}
+
+.input{
+  flex:1;
+  background:transparent;
+  color:white;
+  border:none;
+  outline:none;
+  padding:12px 14px;
+  border-radius:10px;
+  border:1px solid rgba(255,255,255,0.03);
+}
+
+.btn{
+  background: linear-gradient(180deg, var(--gold) 0%, var(--gold-2) 100%);
+  color: #0b0d0f;
+  padding:10px 14px;
+  border-radius:10px;
+  font-weight:700;
+  box-shadow: 0 6px 20px rgba(231,172,40,0.18);
+  cursor:pointer;
+  border:none;
 }

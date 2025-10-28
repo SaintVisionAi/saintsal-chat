@@ -24,3 +24,5 @@ yarn-debug.log*
 dist/
 build/
 .next/
+.vercel
+.env*.local

@@ -26,9 +26,11 @@
     "@azure/cosmos": "^4.2.1",
     "@azure/search-documents": "^12.2.0",
     "@google/generative-ai": "^0.21.0",
+    "@supabase/supabase-js": "^2.76.1",
     "@types/node": "^20.9.0",
     "@types/react": "^18.2.37",
     "@types/react-dom": "^18.2.15",
+    "@vercel/functions": "^3.1.4",
     "autoprefixer": "^10.4.16",
     "axios": "^1.7.9",
     "class-variance-authority": "^0.7.0",
@@ -40,8 +42,9 @@
     "framer-motion": "^10.16.4",
     "lucide-react": "^0.292.0",
     "microsoft-cognitiveservices-speech-sdk": "^1.42.0",
+    "mongodb": "^6.20.0",
     "next": "14.0.3",
-    "openai": "^4.77.3",
+    "openai": "^4.104.0",
     "pg": "^8.16.3",
     "postcss": "^8.4.31",
     "react": "^18.2.0",
@@ -56,5 +59,6 @@
   },
   "engines": {
     "node": ">=18.0.0"
-  }
+  },
+  "packageManager": "npm@10"
 }

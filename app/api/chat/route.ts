@@ -1,35 +1,93 @@
-import { NextRequest, NextResponse } from 'next/server'
+/**
+ * app/api/chat/route.ts
+ * Minimal RAG + OpenAI chat endpoint. Returns JSON { text: string }
+ */
+import { NextResponse } from "next/server";
+import { getDb } from "../../../lib/mongodb";
+import { supabase } from "../../../lib/supabase";
+import OpenAI from "openai";
 
-export async function POST(request: NextRequest) {
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+
+async function embedText(text: string) {
+  const res = await openai.embeddings.create({
+    model: "text-embedding-3-small",
+    input: text
+  });
+  return res.data[0].embedding;
+}
+
+async function ragSearch(queryEmbedding: number[], k = 5) {
   try {
-    const { message, history } = await request.json()
+    // Assumes a Supabase RPC named 'match_documents' returning id, content, metadata, score
+    const { data, error } = await supabase.rpc("match_documents", {
+      query_embedding: queryEmbedding,
+      k
+    });
+    if (error) {
+      console.error("Supabase RAG error:", error);
+      return [];
+    }
+    return data || [];
+  } catch (e) {
+    console.error("RAG exception:", e);
+    return [];
+  }
+}
 
-    // Call your backend superman-complete.mjs on port 3001
-    const response = await fetch('http://localhost:3001/chat', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ 
-        message,
-        history: history || []
-      })
-    })
+export async function POST(req: Request) {
+  try {
+    const body = await req.json();
+    const userMsg: string = body.message || "";
 
-    if (!response.ok) {
-      throw new Error('Backend failed')
+    if (!userMsg) {
+      return NextResponse.json({ text: "No message provided" }, { status: 400 });
     }
 
-    const data = await response.json()
+    // Persist user message to Mongo
+    const db = await getDb();
+    const sessions = db.collection("sessions");
+    await sessions.insertOne({ role: "user", text: userMsg, createdAt: new Date() });
 
-    return NextResponse.json({ 
-      response: data.response || data.message || 'No response from AI'
-    })
+    // Embedding + RAG
+    const embedding = await embedText(userMsg);
+    let docs: any[] = [];
+    try {
+      docs = await ragSearch(embedding, 6);
+    } catch (e) {
+      docs = [];
+    }
 
-  } catch (error) {
-    console.error('Chat API Error:', error)
-    
-    // Fallback response for testing
-    return NextResponse.json({ 
-      response: `I received your message: "${message}"\n\nI'm SAINT SAL™ powered by HACP™ protocol. The backend connection is being configured.`
-    })
+    const ragText = docs.map((d, i) => `DOC ${i + 1}:\n${d.content}\n---\n`).join("\n");
+    const systemPrompt = `You are SaintSal, a faith-driven AI co-founder. Use the following documents as context if relevant:\n\n${ragText}\n\nAnswer concisely and provide clear next steps when appropriate.`;
+
+    // OpenAI chat completion
+    let assistantText = "SaintSal could not generate a response.";
+    try {
+      const completion = await openai.chat.completions.create({
+        model: process.env.OPENAI_MODEL || "gpt-4o-mini",
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: userMsg }
+        ],
+        max_tokens: 900
+      });
+
+      // Many SDKs put the text in completion.choices[0].message.content
+      assistantText =
+        completion?.choices?.[0]?.message?.content ??
+        (completion?.choices?.[0]?.text ?? assistantText);
+    } catch (err) {
+      console.error("OpenAI error:", err);
+      assistantText = "SaintSal is temporarily unavailable (LLM error).";
+    }
+
+    // Save assistant response
+    await sessions.insertOne({ role: "assistant", text: assistantText, createdAt: new Date() });
+
+    return NextResponse.json({ text: assistantText });
+  } catch (err:any) {
+    console.error("Unhandled /api/chat error:", err);
+    return NextResponse.json({ text: "Server error: " + (err?.message ?? String(err)) }, { status: 500 });
   }
 }
