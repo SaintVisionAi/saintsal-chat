@@ -1,6 +1,18 @@
 'use client';
 import React, { useState, useEffect, useRef } from 'react';
-import { Send, Paperclip, Mic, Volume2, Code2, StopCircle } from 'lucide-react';
+import {
+  Send,
+  Paperclip,
+  Mic,
+  Volume2,
+  Code2,
+  StopCircle,
+  Image as ImageIcon,
+  Globe,
+  Sparkles,
+  Calculator,
+  Database
+} from 'lucide-react';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -427,6 +439,58 @@ export default function ChatWindowEnhanced({ chatId }: ChatWindowProps) {
 
       {/* Input Area */}
       <div className="chat-input-container">
+        {/* Tools Bar */}
+        <div className="chat-tools-bar">
+          <button
+            className="tool-btn"
+            onClick={() => setInput('/code ')}
+            title="Code Generation"
+          >
+            <Code2 size={16} />
+            <span>Code</span>
+          </button>
+          <button
+            className="tool-btn"
+            onClick={() => setInput('Generate an image of ')}
+            title="Image Generation"
+          >
+            <ImageIcon size={16} />
+            <span>Image</span>
+          </button>
+          <button
+            className="tool-btn"
+            onClick={() => setInput('Search the web for ')}
+            title="Web Search"
+          >
+            <Globe size={16} />
+            <span>Search</span>
+          </button>
+          <button
+            className="tool-btn"
+            onClick={() => setInput('Analyze data: ')}
+            title="Data Analysis"
+          >
+            <Database size={16} />
+            <span>Data</span>
+          </button>
+          <button
+            className="tool-btn"
+            onClick={() => setInput('Calculate: ')}
+            title="Calculator"
+          >
+            <Calculator size={16} />
+            <span>Calculate</span>
+          </button>
+          <button
+            className="tool-btn"
+            onClick={() => setInput('Create ')}
+            title="AI Assistant"
+          >
+            <Sparkles size={16} />
+            <span>Create</span>
+          </button>
+        </div>
+
         <div className="chat-input-wrapper">
           <input
             ref={fileInputRef}

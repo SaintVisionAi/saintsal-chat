@@ -587,6 +587,59 @@ body {
   backdrop-filter: blur(10px);
 }
 
+/* Chat Tools Bar */
+.chat-tools-bar {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--glass-border);
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+.chat-tools-bar::-webkit-scrollbar {
+  height: 4px;
+}
+
+.chat-tools-bar::-webkit-scrollbar-track {
+  background: var(--charcoal-3);
+  border-radius: 2px;
+}
+
+.chat-tools-bar::-webkit-scrollbar-thumb {
+  background: var(--gold-glow);
+  border-radius: 2px;
+}
+
+.tool-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  border-radius: 8px;
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.tool-btn:hover {
+  background: var(--gold-glow);
+  border-color: var(--gold);
+  color: var(--gold);
+  transform: translateY(-1px);
+}
+
+.tool-btn svg {
+  flex-shrink: 0;
+}
+
 .chat-input-wrapper {
   max-width: 900px;
   margin: 0 auto;
