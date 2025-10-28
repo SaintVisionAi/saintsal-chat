@@ -213,7 +213,8 @@ export async function checkUserLimit(
   const users = db.collection('users');
 
   try {
-    const user = await users.findOne({ _id: userId }) as any;
+    const { ObjectId } = require('mongodb');
+    const user = await users.findOne({ _id: new ObjectId(userId) }) as any;
     if (!user) return false;
 
     // Reset usage if it's a new month
@@ -221,7 +222,7 @@ export async function checkUserLimit(
     const lastReset = new Date(user.usage.lastReset);
     if (now.getMonth() !== lastReset.getMonth() || now.getFullYear() !== lastReset.getFullYear()) {
       await users.updateOne(
-        { _id: userId },
+        { _id: new ObjectId(userId) },
         {
           $set: {
             'usage.messagesThisMonth': 0,
@@ -263,13 +264,14 @@ export async function incrementUsage(
   const users = db.collection('users');
 
   try {
+    const { ObjectId } = require('mongodb');
     const field =
       limitType === 'messages' ? 'usage.messagesThisMonth' :
       limitType === 'voice' ? 'usage.voiceMinutesThisMonth' :
       'usage.ragQueriesThisMonth';
 
     await users.updateOne(
-      { _id: userId },
+      { _id: new ObjectId(userId) },
       { $inc: { [field]: amount } }
     );
   } finally {
