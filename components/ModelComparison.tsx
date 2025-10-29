@@ -42,11 +42,12 @@ export default function ModelComparison() {
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // WHITELABELED SAINTSAL™ MODELS - Branded by function!
   const availableModels = [
-    { id: 'gpt-5-core', name: 'GPT-5 Core', icon: Brain, color: 'text-blue-400', description: 'Most capable model' },
-    { id: 'gpt-5-fast', name: 'GPT-5 Fast', icon: Zap, color: 'text-green-400', description: 'Fastest responses' },
-    { id: 'claude-sonnet-4', name: 'Claude Sonnet 4', icon: Sparkles, color: 'text-purple-400', description: 'Best for analysis' },
-    { id: 'grok-3', name: 'Grok-3', icon: Code2, color: 'text-orange-400', description: 'Real-time data' },
+    { id: 'gpt-5-core', name: 'SaintSal™ Knowledge', icon: Brain, color: 'text-blue-400', description: 'Research & Analysis' },
+    { id: 'gpt-5-fast', name: 'SaintSal™ Speed', icon: Zap, color: 'text-green-400', description: 'Fast Responses' },
+    { id: 'claude-sonnet-4', name: 'SaintSal™ Business', icon: Sparkles, color: 'text-purple-400', description: 'Business Strategy' },
+    { id: 'grok-3', name: 'SaintSal™ Code', icon: Code2, color: 'text-orange-400', description: 'Code Generation' },
     { id: 'saintsal-voice', name: 'SaintSal™ Voice', icon: Mic2, color: 'text-yellow-400', description: 'Voice Intelligence' },
   ];
 
@@ -148,16 +149,46 @@ export default function ModelComparison() {
     return model ? model.color : 'text-blue-400';
   };
 
+  const getModelName = (modelId: string) => {
+    const model = availableModels.find((m) => m.id === modelId);
+    return model ? model.name : modelId;
+  };
+
+  // Auto-detect and render image URLs in text
+  const renderTextWithImages = (text: string) => {
+    const imageUrlRegex = /(https?:\/\/[^\s]+\.(?:jpg|jpeg|png|gif|webp|svg))/gi;
+    const parts = text.split(imageUrlRegex);
+
+    return parts.map((part, index) => {
+      if (imageUrlRegex.test(part)) {
+        return (
+          <div key={index} className="my-3">
+            <img
+              src={part}
+              alt="Generated content"
+              className="max-w-full h-auto rounded-lg border border-gray-700"
+              onError={(e) => {
+                // Fallback if image fails to load
+                (e.target as HTMLImageElement).style.display = 'none';
+              }}
+            />
+          </div>
+        );
+      }
+      return <span key={index}>{part}</span>;
+    });
+  };
+
   const renderArtifact = (artifact: Artifact, index: number) => {
     if (artifact.type === 'code') {
       return (
-        <div key={index} className="artifact-code">
-          <div className="artifact-header">
-            <Code2 size={16} />
-            <span>{artifact.title || 'Code'}</span>
-            <span className="artifact-language">{artifact.language || 'text'}</span>
+        <div key={index} className="bg-gray-900 border border-gray-700 rounded-lg overflow-hidden">
+          <div className="flex items-center gap-2 px-4 py-2 bg-gray-800/50 border-b border-gray-700">
+            <Code2 size={16} className="text-orange-400" />
+            <span className="text-sm font-medium text-white">{artifact.title || 'Code'}</span>
+            <span className="ml-auto text-xs text-gray-500">{artifact.language || 'text'}</span>
           </div>
-          <pre className="artifact-content">
+          <pre className="p-4 overflow-x-auto text-sm text-gray-300">
             <code>{artifact.content}</code>
           </pre>
         </div>
@@ -166,16 +197,20 @@ export default function ModelComparison() {
 
     if (artifact.type === 'image') {
       return (
-        <div key={index} className="artifact-image">
-          <img src={artifact.content} alt={artifact.title || 'Generated image'} />
+        <div key={index} className="my-3">
+          <img
+            src={artifact.content}
+            alt={artifact.title || 'Generated image'}
+            className="max-w-full h-auto rounded-lg border border-gray-700"
+          />
         </div>
       );
     }
 
     return (
-      <div key={index} className="artifact-document">
-        <FileText size={16} />
-        <span>{artifact.title || 'Document'}</span>
+      <div key={index} className="flex items-center gap-2 p-3 bg-gray-800 border border-gray-700 rounded-lg">
+        <FileText size={16} className="text-blue-400" />
+        <span className="text-sm text-white">{artifact.title || 'Document'}</span>
       </div>
     );
   };
@@ -196,7 +231,7 @@ export default function ModelComparison() {
             <TrendingUp className="text-yellow-500" size={28} />
             <div>
               <h2 className="text-xl font-bold text-white">SaintSal™ Model Comparison</h2>
-              <p className="text-sm text-gray-400">Compare multiple AI models side-by-side</p>
+              <p className="text-sm text-gray-400">Compare AI capabilities side-by-side</p>
             </div>
           </div>
           {comparison && (
@@ -214,7 +249,7 @@ export default function ModelComparison() {
             {/* Model Selection */}
             <div className="bg-gray-900/50 border border-gray-800 rounded-lg p-4">
               <label className="block text-sm font-medium text-gray-300 mb-3">
-                Select Models (min 2, max 5)
+                Select SaintSal™ Capabilities (min 2, max 5)
               </label>
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
                 {availableModels.map((model) => {
@@ -252,7 +287,7 @@ export default function ModelComparison() {
                 className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-yellow-500 resize-none"
                 value={prompt}
                 onChange={(e) => setPrompt(e.target.value)}
-                placeholder="Enter a prompt to compare across models..."
+                placeholder="Enter a prompt to compare across SaintSal™ capabilities..."
                 rows={4}
                 disabled={loading}
               />
@@ -321,12 +356,12 @@ export default function ModelComparison() {
                 {loading ? (
                   <>
                     <div className="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin"></div>
-                    <span>Comparing Models...</span>
+                    <span>Comparing...</span>
                   </>
                 ) : (
                   <>
                     <TrendingUp size={20} />
-                    <span>Compare {selectedModels.length} Models</span>
+                    <span>Compare {selectedModels.length} Capabilities</span>
                   </>
                 )}
               </button>
@@ -340,7 +375,7 @@ export default function ModelComparison() {
               <div className="flex items-center justify-center gap-2 p-3 bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border border-yellow-500/30 rounded-lg">
                 <span className="text-2xl">👑</span>
                 <span className="text-lg font-bold text-white">
-                  Winner: {comparison.winner}
+                  Best Result: {getModelName(comparison.winner)}
                 </span>
               </div>
 
@@ -349,6 +384,7 @@ export default function ModelComparison() {
                 {comparison.results.map((result, index) => {
                   const Icon = getModelIcon(result.model);
                   const color = getModelColor(result.model);
+                  const name = getModelName(result.model);
                   const isWinner = result.model === comparison.winner;
 
                   return (
@@ -362,7 +398,7 @@ export default function ModelComparison() {
                       <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center gap-2">
                           <Icon className={color} size={22} />
-                          <span className="font-semibold text-white">{result.model}</span>
+                          <span className="font-semibold text-white">{name}</span>
                           {isWinner && <span className="text-2xl">👑</span>}
                         </div>
                         <button
@@ -395,9 +431,9 @@ export default function ModelComparison() {
                           </div>
                         ) : (
                           <div className="space-y-3">
-                            <p className="text-white text-sm leading-relaxed whitespace-pre-wrap">
-                              {result.response}
-                            </p>
+                            <div className="text-white text-sm leading-relaxed whitespace-pre-wrap">
+                              {renderTextWithImages(result.response)}
+                            </div>
                             {/* Artifacts */}
                             {result.hasArtifacts && result.artifacts && (
                               <div className="space-y-2 mt-4">
@@ -418,9 +454,9 @@ export default function ModelComparison() {
           {!comparison && !loading && (
             <div className="flex flex-col items-center justify-center py-16 text-center">
               <TrendingUp className="text-yellow-500 mb-4" size={64} />
-              <h3 className="text-2xl font-bold text-white mb-2">Ready to Compare Models</h3>
+              <h3 className="text-2xl font-bold text-white mb-2">Ready to Compare</h3>
               <p className="text-gray-400 max-w-md">
-                Select at least 2 models, enter your prompt, and optionally attach files to see side-by-side AI responses
+                Select at least 2 SaintSal™ capabilities, enter your prompt, and optionally attach files to see side-by-side results
               </p>
             </div>
           )}

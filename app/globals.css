@@ -2865,6 +2865,37 @@ body {
   letter-spacing: 0.5px;
 }
 
+/* Cookin' Knowledge Logo Pulsating Animation */
+.cookin-logo-pulse {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 10;
+  pointer-events: none;
+}
+
+.cookin-logo-animated {
+  width: 120px;
+  height: 120px;
+  object-fit: contain;
+  filter: drop-shadow(0 0 20px rgba(255, 215, 0, 0.6));
+  animation: pulse-cookin 2s ease-in-out infinite;
+}
+
+@keyframes pulse-cookin {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+    filter: drop-shadow(0 0 20px rgba(255, 215, 0, 0.6));
+  }
+  50% {
+    transform: scale(1.15);
+    opacity: 0.85;
+    filter: drop-shadow(0 0 40px rgba(255, 215, 0, 0.9));
+  }
+}
+
 .walkie-talkie-instructions {
   display: flex;
   justify-content: center;

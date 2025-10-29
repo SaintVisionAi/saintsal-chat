@@ -108,6 +108,7 @@ export default function WalkieTalkie() {
 
     try {
       // Step 1: Speech-to-Text
+      console.log('🎤 [WALKIE] Starting speech-to-text...');
       const audioFile = new File([audioBlob], 'recording.webm', { type: 'audio/webm' });
       const formData = new FormData();
       formData.append('audio', audioFile);
@@ -124,30 +125,32 @@ export default function WalkieTalkie() {
       }
 
       const userText = sttData.text;
+      console.log('✅ [WALKIE] STT complete:', userText);
 
-      // Add user message
-      setMessages((prev) => [
-        ...prev,
-        {
-          role: 'user',
-          content: userText,
-          timestamp: new Date(),
-        },
-      ]);
+      // Add user message and get the new index
+      let assistantMessageIndex = 0;
+      setMessages((prev) => {
+        const newMessages = [
+          ...prev,
+          {
+            role: 'user' as const,
+            content: userText,
+            timestamp: new Date(),
+          },
+          {
+            role: 'assistant' as const,
+            content: '',
+            timestamp: new Date(),
+          },
+        ];
+        assistantMessageIndex = newMessages.length - 1;
+        return newMessages;
+      });
 
       // Step 2: Get streaming AI response
-      setIsProcessing(false); // Switch to playing mode
+      console.log('💬 [WALKIE] Starting chat streaming...');
+      setIsProcessing(false);
       setIsPlaying(true);
-
-      const assistantMessageIndex = messages.length + 1;
-      setMessages((prev) => [
-        ...prev,
-        {
-          role: 'assistant',
-          content: '',
-          timestamp: new Date(),
-        },
-      ]);
 
       // Stream response from chat API
       const chatResponse = await fetch('/api/chat', {
@@ -188,46 +191,53 @@ export default function WalkieTalkie() {
               const parsed = JSON.parse(data);
 
               if (parsed.error) {
+                console.error('❌ [WALKIE] Chat error:', parsed.error);
                 setMessages((prev) => {
                   const newMessages = [...prev];
-                  newMessages[assistantMessageIndex] = {
-                    role: 'assistant',
-                    content: parsed.error,
-                    timestamp: new Date(),
-                  };
+                  if (newMessages[assistantMessageIndex]) {
+                    newMessages[assistantMessageIndex] = {
+                      ...newMessages[assistantMessageIndex],
+                      content: parsed.error,
+                    };
+                  }
                   return newMessages;
                 });
-                break;
+                setIsPlaying(false);
+                return;
               }
 
               if (parsed.done) {
+                console.log('✅ [WALKIE] Streaming complete, playing TTS...');
                 // Streaming complete - play TTS
                 if (fullResponse) {
                   await playResponse(fullResponse);
                 }
-                break;
+                setIsPlaying(false);
+                return;
               }
 
               if (parsed.token) {
                 fullResponse += parsed.token;
                 setMessages((prev) => {
                   const newMessages = [...prev];
-                  newMessages[assistantMessageIndex] = {
-                    ...newMessages[assistantMessageIndex],
-                    content: newMessages[assistantMessageIndex].content + parsed.token,
-                  };
+                  if (newMessages[assistantMessageIndex]) {
+                    newMessages[assistantMessageIndex] = {
+                      ...newMessages[assistantMessageIndex],
+                      content: (newMessages[assistantMessageIndex].content || '') + parsed.token,
+                    };
+                  }
                   return newMessages;
                 });
               }
             } catch (e) {
-              console.error('Error parsing SSE data:', e);
+              console.error('❌ [WALKIE] Error parsing SSE data:', e);
             }
           }
         }
       }
     } catch (err) {
-      console.error('Voice processing error:', err);
-      alert('Failed to process voice');
+      console.error('❌ [WALKIE] Voice processing error:', err);
+      alert(`Failed to process voice: ${err}`);
       setIsProcessing(false);
       setIsPlaying(false);
     }
@@ -350,6 +360,17 @@ export default function WalkieTalkie() {
           </div>
         )}
 
+        {/* Cookin' Knowledge Logo Pulsating Animation - When AI is Thinking/Speaking */}
+        {(isProcessing || isPlaying) && (
+          <div className="cookin-logo-pulse">
+            <img
+              src="/logos/cookin.png"
+              alt="Cookin' Knowledge"
+              className="cookin-logo-animated"
+            />
+          </div>
+        )}
+
         <button
           className={`walkie-talkie-button ${isRecording ? 'recording' : ''} ${isProcessing || isPlaying ? 'disabled' : ''}`}
           onMouseDown={handlePressStart}
@@ -367,7 +388,7 @@ export default function WalkieTalkie() {
           ) : isProcessing ? (
             <>
               <Loader2 className="spin" size={48} />
-              <span className="button-text">Processing...</span>
+              <span className="button-text">Cookin' Your Answer...</span>
             </>
           ) : isPlaying ? (
             <>
