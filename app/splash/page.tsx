@@ -1,11 +1,12 @@
-'use client';
-import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { Sparkles, ArrowRight } from 'lucide-react';
+'use client'
+
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import Image from 'next/image'
 
 export default function SplashPage() {
-  const router = useRouter();
-  const [isLoaded, setIsLoaded] = useState(false);
+  const router = useRouter()
+  const [isReady, setIsReady] = useState(false)
 
   useEffect(() => {
     // Check if user is already authenticated
@@ -17,6 +18,7 @@ export default function SplashPage() {
         if (data.authenticated) {
           // User is logged in, redirect to chat
           router.push('/');
+          return;
         }
       } catch (err) {
         console.log('Not authenticated');
@@ -24,85 +26,76 @@ export default function SplashPage() {
     };
 
     checkAuth();
-    setTimeout(() => setIsLoaded(true), 300);
-  }, [router]);
+    setTimeout(() => setIsReady(true), 500)
+  }, [router])
 
   return (
-    <div className="splash-container">
-      {/* Animated Background */}
-      <div className="splash-background">
-        <div className="splash-gradient"></div>
-        <div className="splash-particles"></div>
-      </div>
+    <div className="min-h-screen bg-black flex items-center justify-center relative overflow-hidden">
+      {/* No Background - Clean Black */}
 
       {/* Main Content */}
-      <div className={`splash-content ${isLoaded ? 'loaded' : ''}`}>
-        {/* Logo Container - Centered Animation */}
-        <div className="splash-logo-container">
-          {/* Animated Logo */}
-          <div className="splash-logo-wrapper">
-            <video
-              className="splash-logo-video"
-              autoPlay
-              loop
-              muted
-              playsInline
-            >
-              <source src="https://files.catbox.moe/xhdqj9.mp4" type="video/mp4" />
-            </video>
+      <div className={`relative z-10 text-center transition-all duration-1000 ${isReady ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}`}>
+        {/* HACP Badge */}
+        <div className="mb-12">
+          <div className="inline-flex items-center space-x-2 px-3 py-1">
+            <div className="w-2 h-2 bg-yellow-500/50 rounded-full animate-pulse" />
+            <span className="text-xs tracking-[0.3em] text-gray-500 font-light">HACP™ PROTOCOL ACTIVE</span>
+            <div className="w-2 h-2 bg-yellow-500/50 rounded-full animate-pulse" />
           </div>
-
-          <h1 className="splash-title">
-            SaintSal<span className="trademark">™</span>
-          </h1>
-          <p className="splash-subtitle">
-            IQ 157 Intelligence Platform
-          </p>
         </div>
 
-        {/* CTA Buttons */}
-        <div className="splash-actions">
+        {/* Main Logo */}
+        <div className="mb-8">
+          <Image
+            src="/logos/THE BEST MAIN LOGO + COOKIN.png"
+            alt="SAINTVISIONAI"
+            width={350}
+            height={200}
+            className="mx-auto object-contain"
+            priority
+          />
+        </div>
+
+        {/* Title */}
+        <h1 className="mb-4">
+          <div className="text-6xl md:text-7xl font-thin tracking-wider">
+            <span className="bg-gradient-to-r from-white via-gray-300 to-white bg-clip-text text-transparent">
+              SAINT
+            </span>
+            <span className="bg-gradient-to-r from-yellow-400 via-yellow-500 to-yellow-400 bg-clip-text text-transparent">
+              VISION
+            </span>
+          </div>
+          <div className="text-xl md:text-2xl font-thin tracking-[0.5em] mt-4 text-gray-500">
+            RESPONSIBLE INTELLIGENCE
+          </div>
+        </h1>
+
+        {/* Enter Button */}
+        <div className="mt-20">
           <button
-            className="splash-btn primary"
             onClick={() => router.push('/auth/signup')}
+            className="group relative inline-flex items-center"
           >
-            <span>Get Started</span>
-            <ArrowRight size={20} />
-          </button>
-
-          <button
-            className="splash-btn secondary"
-            onClick={() => router.push('/auth/login')}
-          >
-            Sign In
+            <span className="text-gray-600 text-sm tracking-wider transition-colors group-hover:text-yellow-500">
+              ENTER
+            </span>
+            <svg className="w-4 h-4 ml-2 text-gray-600 group-hover:text-yellow-500 transition-all group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 5l7 7-7 7" />
+            </svg>
           </button>
         </div>
 
-        {/* Features Preview */}
-        <div className="splash-features">
-          <div className="splash-feature">
-            <div className="feature-icon">🧠</div>
-            <p>Multi-Model AI</p>
-          </div>
-          <div className="splash-feature">
-            <div className="feature-icon">🎙️</div>
-            <p>Voice Integration</p>
-          </div>
-          <div className="splash-feature">
-            <div className="feature-icon">⚡</div>
-            <p>Real-time Streaming</p>
-          </div>
-          <div className="splash-feature">
-            <div className="feature-icon">🔐</div>
-            <p>Enterprise Security</p>
-          </div>
+        {/* Sign In Link */}
+        <div className="mt-8">
+          <button
+            onClick={() => router.push('/auth/login')}
+            className="text-gray-700 text-xs tracking-wider hover:text-gray-500 transition-colors"
+          >
+            Already have an account? <span className="text-yellow-600 hover:text-yellow-500">Sign In</span>
+          </button>
         </div>
       </div>
-
-      {/* Footer */}
-      <footer className="splash-footer">
-        <p>© 2025 SaintSal™. All rights reserved.</p>
-      </footer>
     </div>
-  );
+  )
 }
