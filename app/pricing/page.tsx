@@ -157,7 +157,7 @@ export default function PricingPage() {
                     </ul>
 
                     <button
-                      onClick={() => plan.name === 'Enterprise' ? router.push('/contact') : router.push('/auth/signup')}
+                      onClick={() => plan.name === 'Enterprise' ? window.location.href = 'mailto:ryan@cookinknowledge.com?subject=Enterprise Plan Inquiry' : router.push('/auth/signup')}
                       className={`w-full py-3 px-6 rounded-lg font-semibold transition ${
                         plan.popular
                           ? 'bg-saint-yellow-500 text-black hover:bg-saint-yellow-400'

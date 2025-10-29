@@ -255,7 +255,7 @@ export default function TermsPage() {
                     🙏 These terms are crafted with integrity and faithfulness to serve our enterprise customers with excellence.
                   </p>
                   <button
-                    onClick={() => router.push('/contact')}
+                    onClick={() => window.location.href = 'mailto:ryan@cookinknowledge.com?subject=Terms of Service Question'}
                     className="btn-outline"
                   >
                     Legal Questions?
