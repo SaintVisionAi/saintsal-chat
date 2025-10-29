@@ -6,6 +6,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { inviteTeamMember } from '@/lib/mongodb-schema';
+import { sendTeamInvitationEmail } from '@/lib/email';
 import { MongoClient } from 'mongodb';
 
 const MONGODB_URI = process.env.MONGODB_URI!;
@@ -103,16 +104,31 @@ export async function POST(req: NextRequest) {
       // Invite the member
       const token = await inviteTeamMember(user.teamId, authCookie, email.toLowerCase(), role);
 
-      console.log(`✅ [TEAMS] Invitation sent to ${email}`);
+      console.log(`✅ [TEAMS] Invitation created for ${email}`);
 
-      // TODO: Send invitation email here
+      // Send invitation email
       const inviteUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/teams/accept?token=${token}`;
+
+      const emailSent = await sendTeamInvitationEmail({
+        to: email.toLowerCase(),
+        teamName: team.name,
+        inviterName: user.name,
+        role,
+        inviteUrl,
+      });
+
+      if (emailSent) {
+        console.log(`✅ [TEAMS] Invitation email sent to ${email}`);
+      } else {
+        console.log(`⚠️ [TEAMS] Invitation created but email failed to send to ${email}`);
+      }
 
       return NextResponse.json({
         success: true,
         token,
         inviteUrl,
         message: 'Invitation sent successfully',
+        emailSent,
       });
     } catch (error: any) {
       await client.close();
