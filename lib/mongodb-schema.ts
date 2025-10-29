@@ -15,6 +15,11 @@ export interface User {
   password: string; // bcrypt hashed
   plan: 'free' | 'pro' | 'enterprise';
 
+  // Email verification
+  emailVerified: boolean;
+  verificationToken?: string;
+  verificationTokenExpiry?: Date;
+
   // Team membership (for team plans)
   teamId?: string; // If user is part of a team
   teamRole?: 'owner' | 'admin' | 'member'; // Role within the team

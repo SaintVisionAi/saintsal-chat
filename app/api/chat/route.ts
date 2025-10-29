@@ -60,6 +60,41 @@ export async function POST(req: NextRequest) {
     }
     console.log(`🔐 [CHAT] User ID: ${authCookie}`);
 
+    // 📧 CHECK EMAIL VERIFICATION
+    const client = await getMongoClient();
+    const db = client.db("saintsal_db");
+    const users = db.collection("users");
+
+    const { ObjectId } = require('mongodb');
+    const user = await users.findOne({ _id: new ObjectId(authCookie) });
+
+    if (!user) {
+      console.log('❌ [CHAT] User not found');
+      return new Response(
+        JSON.stringify({ error: "User not found" }),
+        {
+          status: 404,
+          headers: { "Content-Type": "application/json" }
+        }
+      );
+    }
+
+    if (!user.emailVerified) {
+      console.log('❌ [CHAT] Email not verified');
+      return new Response(
+        JSON.stringify({
+          error: "Email verification required",
+          message: "Please verify your email address before using chat. Check your inbox for the verification link.",
+          emailVerificationRequired: true
+        }),
+        {
+          status: 403,
+          headers: { "Content-Type": "application/json" }
+        }
+      );
+    }
+    console.log('✅ [CHAT] Email verified');
+
     // 📊 CHECK MESSAGE LIMIT
     console.log('📊 [CHAT] Checking message limit...');
     const hasMessageLimit = await checkUserLimit(authCookie, 'messages');
@@ -79,8 +114,6 @@ export async function POST(req: NextRequest) {
     }
     console.log('✅ [CHAT] Message limit OK');
 
-    const client = await getMongoClient();
-    const db = client.db("saintsal_db");
     const messagesCol = db.collection("messages");
     const documentsCol = db.collection("documents");
 
