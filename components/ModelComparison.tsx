@@ -1,6 +1,6 @@
 'use client';
-import React, { useState } from 'react';
-import { Brain, Zap, Sparkles, Code2, TrendingUp, Clock, Zap as TokenIcon, Copy, Download } from 'lucide-react';
+import React, { useState, useRef } from 'react';
+import { Brain, Zap, Sparkles, Code2, TrendingUp, Clock, Zap as TokenIcon, Copy, Download, Mic2, Paperclip, X, FileText, Image as ImageIcon } from 'lucide-react';
 
 interface ComparisonResult {
   model: string;
@@ -8,6 +8,15 @@ interface ComparisonResult {
   tokens: number;
   duration: number;
   error?: string;
+  hasArtifacts?: boolean;
+  artifacts?: Artifact[];
+}
+
+interface Artifact {
+  type: 'code' | 'image' | 'document';
+  content: string;
+  language?: string;
+  title?: string;
 }
 
 interface ComparisonData {
@@ -18,17 +27,27 @@ interface ComparisonData {
   timestamp: string;
 }
 
+interface UploadedFile {
+  name: string;
+  size: number;
+  type: string;
+  data: string;
+}
+
 export default function ModelComparison() {
   const [prompt, setPrompt] = useState('');
   const [loading, setLoading] = useState(false);
   const [comparison, setComparison] = useState<ComparisonData | null>(null);
   const [selectedModels, setSelectedModels] = useState<string[]>(['gpt-5-core', 'claude-sonnet-4', 'grok-3']);
+  const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const availableModels = [
-    { id: 'gpt-5-core', name: 'GPT-5 Core', icon: Brain, color: 'text-blue-400' },
-    { id: 'gpt-5-fast', name: 'GPT-5 Fast', icon: Zap, color: 'text-green-400' },
-    { id: 'claude-sonnet-4', name: 'Claude Sonnet 4', icon: Sparkles, color: 'text-purple-400' },
-    { id: 'grok-3', name: 'Grok-3', icon: Code2, color: 'text-orange-400' },
+    { id: 'gpt-5-core', name: 'GPT-5 Core', icon: Brain, color: 'text-blue-400', description: 'Most capable model' },
+    { id: 'gpt-5-fast', name: 'GPT-5 Fast', icon: Zap, color: 'text-green-400', description: 'Fastest responses' },
+    { id: 'claude-sonnet-4', name: 'Claude Sonnet 4', icon: Sparkles, color: 'text-purple-400', description: 'Best for analysis' },
+    { id: 'grok-3', name: 'Grok-3', icon: Code2, color: 'text-orange-400', description: 'Real-time data' },
+    { id: 'saintsal-voice', name: 'SaintSal™ Voice', icon: Mic2, color: 'text-yellow-400', description: 'Voice Intelligence' },
   ];
 
   const handleCompare = async (e: React.FormEvent) => {
@@ -43,6 +62,7 @@ export default function ModelComparison() {
         body: JSON.stringify({
           prompt,
           models: selectedModels,
+          files: uploadedFiles,
         }),
       });
 
@@ -59,6 +79,46 @@ export default function ModelComparison() {
     setSelectedModels((prev) =>
       prev.includes(modelId) ? prev.filter((m) => m !== modelId) : [...prev, modelId]
     );
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    const newFiles: UploadedFile[] = [];
+
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      const reader = new FileReader();
+
+      await new Promise((resolve) => {
+        reader.onload = (event) => {
+          const data = event.target?.result as string;
+          newFiles.push({
+            name: file.name,
+            size: file.size,
+            type: file.type,
+            data: data,
+          });
+          resolve(null);
+        };
+
+        if (file.type.startsWith('image/')) {
+          reader.readAsDataURL(file);
+        } else {
+          reader.readAsText(file);
+        }
+      });
+    }
+
+    setUploadedFiles((prev) => [...prev, ...newFiles]);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  const removeFile = (index: number) => {
+    setUploadedFiles((prev) => prev.filter((_, i) => i !== index));
   };
 
   const copyResult = (text: string) => {
@@ -88,157 +148,284 @@ export default function ModelComparison() {
     return model ? model.color : 'text-blue-400';
   };
 
-  return (
-    <div className="model-comparison-container">
-      {/* Header */}
-      <div className="comparison-header">
-        <div className="comparison-header-content">
-          <TrendingUp className="text-gold" size={28} />
-          <div>
-            <h2 className="comparison-title">SaintSal™ Model Comparison</h2>
-            <p className="comparison-subtitle">Run the same prompt across multiple AI models</p>
+  const renderArtifact = (artifact: Artifact, index: number) => {
+    if (artifact.type === 'code') {
+      return (
+        <div key={index} className="artifact-code">
+          <div className="artifact-header">
+            <Code2 size={16} />
+            <span>{artifact.title || 'Code'}</span>
+            <span className="artifact-language">{artifact.language || 'text'}</span>
           </div>
+          <pre className="artifact-content">
+            <code>{artifact.content}</code>
+          </pre>
         </div>
+      );
+    }
+
+    if (artifact.type === 'image') {
+      return (
+        <div key={index} className="artifact-image">
+          <img src={artifact.content} alt={artifact.title || 'Generated image'} />
+        </div>
+      );
+    }
+
+    return (
+      <div key={index} className="artifact-document">
+        <FileText size={16} />
+        <span>{artifact.title || 'Document'}</span>
       </div>
+    );
+  };
 
-      {/* Input Section */}
-      <div className="comparison-input-section">
-        <form onSubmit={handleCompare} className="comparison-form">
-          <div className="comparison-prompt-area">
-            <label className="comparison-label">Your Prompt</label>
-            <textarea
-              className="comparison-textarea"
-              value={prompt}
-              onChange={(e) => setPrompt(e.target.value)}
-              placeholder="Enter a prompt to test across multiple models..."
-              rows={5}
-              disabled={loading}
-            />
-          </div>
+  const formatFileSize = (bytes: number) => {
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+    return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+  };
 
-          <div className="comparison-model-selector">
-            <label className="comparison-label">Select Models (min 2)</label>
-            <div className="comparison-model-grid">
-              {availableModels.map((model) => {
-                const Icon = model.icon;
-                return (
-                  <button
-                    key={model.id}
-                    type="button"
-                    onClick={() => toggleModel(model.id)}
-                    className={`comparison-model-card ${selectedModels.includes(model.id) ? 'active' : ''}`}
-                  >
-                    <Icon className={model.color} size={20} />
-                    <span className="comparison-model-name">{model.name}</span>
-                    {selectedModels.includes(model.id) && (
-                      <span className="comparison-checkmark">✓</span>
-                    )}
-                  </button>
-                );
-              })}
+  return (
+    <div className="chat-window">
+      {/* Full Screen Container */}
+      <div className="flex flex-col h-full">
+        {/* Header */}
+        <div className="flex items-center justify-between p-4 border-b border-gray-800 bg-gray-900/50">
+          <div className="flex items-center gap-3">
+            <TrendingUp className="text-yellow-500" size={28} />
+            <div>
+              <h2 className="text-xl font-bold text-white">SaintSal™ Model Comparison</h2>
+              <p className="text-sm text-gray-400">Compare multiple AI models side-by-side</p>
             </div>
           </div>
+          {comparison && (
+            <button onClick={exportComparison} className="flex items-center gap-2 px-4 py-2 bg-yellow-500/10 border border-yellow-500/30 rounded-lg text-yellow-500 hover:bg-yellow-500/20 transition">
+              <Download size={16} />
+              <span>Export</span>
+            </button>
+          )}
+        </div>
 
-          <button
-            type="submit"
-            className="comparison-submit-btn"
-            disabled={loading || !prompt.trim() || selectedModels.length < 2}
-          >
-            {loading ? (
-              <>
-                <div className="spinner-small"></div>
-                <span>Running Comparison...</span>
-              </>
-            ) : (
-              <>
-                <TrendingUp size={20} />
-                <span>Compare Models</span>
-              </>
-            )}
-          </button>
-        </form>
-      </div>
+        {/* Scrollable Content */}
+        <div className="flex-1 overflow-y-auto p-4 space-y-6">
+          {/* Input Section */}
+          <form onSubmit={handleCompare} className="space-y-4">
+            {/* Model Selection */}
+            <div className="bg-gray-900/50 border border-gray-800 rounded-lg p-4">
+              <label className="block text-sm font-medium text-gray-300 mb-3">
+                Select Models (min 2, max 5)
+              </label>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
+                {availableModels.map((model) => {
+                  const Icon = model.icon;
+                  const isSelected = selectedModels.includes(model.id);
+                  return (
+                    <button
+                      key={model.id}
+                      type="button"
+                      onClick={() => toggleModel(model.id)}
+                      className={`relative p-4 rounded-lg border-2 transition ${
+                        isSelected
+                          ? 'border-yellow-500 bg-yellow-500/10'
+                          : 'border-gray-700 bg-gray-800/50 hover:border-gray-600'
+                      }`}
+                    >
+                      <Icon className={model.color} size={24} />
+                      <div className="mt-2 text-sm font-medium text-white">{model.name}</div>
+                      <div className="text-xs text-gray-400 mt-1">{model.description}</div>
+                      {isSelected && (
+                        <div className="absolute top-2 right-2 w-5 h-5 bg-yellow-500 rounded-full flex items-center justify-center">
+                          <span className="text-black text-xs font-bold">✓</span>
+                        </div>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
 
-      {/* Results Section */}
-      {comparison && (
-        <div className="comparison-results-section">
-          <div className="comparison-results-header">
-            <h3 className="comparison-results-title">Comparison Results</h3>
-            <div className="comparison-results-actions">
-              <span className="comparison-winner-badge">
-                Winner: <strong>{comparison.winner}</strong>
-              </span>
-              <button onClick={exportComparison} className="comparison-export-btn">
-                <Download size={16} />
-                <span>Export</span>
+            {/* Prompt Input */}
+            <div className="bg-gray-900/50 border border-gray-800 rounded-lg p-4">
+              <label className="block text-sm font-medium text-gray-300 mb-3">Your Prompt</label>
+              <textarea
+                className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-yellow-500 resize-none"
+                value={prompt}
+                onChange={(e) => setPrompt(e.target.value)}
+                placeholder="Enter a prompt to compare across models..."
+                rows={4}
+                disabled={loading}
+              />
+
+              {/* File Upload Section */}
+              <div className="mt-4 space-y-3">
+                <div className="flex items-center gap-3">
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    multiple
+                    onChange={handleFileUpload}
+                    className="hidden"
+                    accept="image/*,.txt,.pdf,.doc,.docx,.json,.csv"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="flex items-center gap-2 px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-gray-300 hover:bg-gray-700 transition"
+                    disabled={loading}
+                  >
+                    <Paperclip size={18} />
+                    <span>Attach Files</span>
+                  </button>
+                  <span className="text-xs text-gray-500">
+                    Images, documents, code files
+                  </span>
+                </div>
+
+                {/* Uploaded Files */}
+                {uploadedFiles.length > 0 && (
+                  <div className="flex flex-wrap gap-2">
+                    {uploadedFiles.map((file, index) => (
+                      <div
+                        key={index}
+                        className="flex items-center gap-2 px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg"
+                      >
+                        {file.type.startsWith('image/') ? (
+                          <ImageIcon size={16} className="text-blue-400" />
+                        ) : (
+                          <FileText size={16} className="text-green-400" />
+                        )}
+                        <span className="text-sm text-white truncate max-w-[150px]">
+                          {file.name}
+                        </span>
+                        <span className="text-xs text-gray-500">{formatFileSize(file.size)}</span>
+                        <button
+                          type="button"
+                          onClick={() => removeFile(index)}
+                          className="ml-2 text-gray-400 hover:text-red-500 transition"
+                        >
+                          <X size={16} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Submit Button */}
+              <button
+                type="submit"
+                className="w-full mt-4 py-3 bg-gradient-to-r from-yellow-500 to-orange-500 text-black font-semibold rounded-lg hover:from-yellow-400 hover:to-orange-400 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                disabled={loading || !prompt.trim() || selectedModels.length < 2}
+              >
+                {loading ? (
+                  <>
+                    <div className="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin"></div>
+                    <span>Comparing Models...</span>
+                  </>
+                ) : (
+                  <>
+                    <TrendingUp size={20} />
+                    <span>Compare {selectedModels.length} Models</span>
+                  </>
+                )}
               </button>
             </div>
-          </div>
+          </form>
 
-          <div className="comparison-results-grid">
-            {comparison.results.map((result, index) => {
-              const Icon = getModelIcon(result.model);
-              const color = getModelColor(result.model);
-              const isWinner = result.model === comparison.winner;
+          {/* Results Section */}
+          {comparison && (
+            <div className="space-y-4">
+              {/* Winner Badge */}
+              <div className="flex items-center justify-center gap-2 p-3 bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border border-yellow-500/30 rounded-lg">
+                <span className="text-2xl">👑</span>
+                <span className="text-lg font-bold text-white">
+                  Winner: {comparison.winner}
+                </span>
+              </div>
 
-              return (
-                <div
-                  key={index}
-                  className={`comparison-result-card ${isWinner ? 'winner' : ''} ${result.error ? 'error' : ''}`}
-                >
-                  <div className="comparison-result-header">
-                    <div className="comparison-result-model">
-                      <Icon className={color} size={22} />
-                      <span className="comparison-result-model-name">{result.model}</span>
-                      {isWinner && <span className="winner-crown">👑</span>}
-                    </div>
-                    <button
-                      onClick={() => copyResult(result.response)}
-                      className="comparison-copy-btn"
-                      title="Copy response"
+              {/* Results Grid */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                {comparison.results.map((result, index) => {
+                  const Icon = getModelIcon(result.model);
+                  const color = getModelColor(result.model);
+                  const isWinner = result.model === comparison.winner;
+
+                  return (
+                    <div
+                      key={index}
+                      className={`bg-gray-900/50 border rounded-lg p-4 ${
+                        isWinner ? 'border-yellow-500 shadow-lg shadow-yellow-500/20' : 'border-gray-800'
+                      } ${result.error ? 'border-red-500' : ''}`}
                     >
-                      <Copy size={16} />
-                    </button>
-                  </div>
-
-                  <div className="comparison-result-stats">
-                    <div className="comparison-stat">
-                      <Clock size={14} />
-                      <span>{result.duration}ms</span>
-                    </div>
-                    <div className="comparison-stat">
-                      <TokenIcon size={14} />
-                      <span>{result.tokens} tokens</span>
-                    </div>
-                  </div>
-
-                  <div className="comparison-result-content">
-                    {result.error ? (
-                      <div className="comparison-error">
-                        <span className="error-icon">⚠️</span>
-                        <span>{result.error}</span>
+                      {/* Header */}
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center gap-2">
+                          <Icon className={color} size={22} />
+                          <span className="font-semibold text-white">{result.model}</span>
+                          {isWinner && <span className="text-2xl">👑</span>}
+                        </div>
+                        <button
+                          onClick={() => copyResult(result.response)}
+                          className="p-2 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition"
+                          title="Copy response"
+                        >
+                          <Copy size={16} />
+                        </button>
                       </div>
-                    ) : (
-                      <p>{result.response}</p>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
 
-      {/* Empty State */}
-      {!comparison && !loading && (
-        <div className="comparison-empty-state">
-          <TrendingUp className="text-gold" size={64} />
-          <h3 className="comparison-empty-title">Ready to Compare</h3>
-          <p className="comparison-empty-text">
-            Select at least 2 models and enter a prompt to see side-by-side responses
-          </p>
+                      {/* Stats */}
+                      <div className="flex items-center gap-4 mb-3 text-sm text-gray-400">
+                        <div className="flex items-center gap-1">
+                          <Clock size={14} />
+                          <span>{result.duration}ms</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <TokenIcon size={14} />
+                          <span>{result.tokens} tokens</span>
+                        </div>
+                      </div>
+
+                      {/* Response */}
+                      <div className="bg-gray-800/50 rounded-lg p-3 border border-gray-700">
+                        {result.error ? (
+                          <div className="flex items-center gap-2 text-red-500">
+                            <span className="text-xl">⚠️</span>
+                            <span>{result.error}</span>
+                          </div>
+                        ) : (
+                          <div className="space-y-3">
+                            <p className="text-white text-sm leading-relaxed whitespace-pre-wrap">
+                              {result.response}
+                            </p>
+                            {/* Artifacts */}
+                            {result.hasArtifacts && result.artifacts && (
+                              <div className="space-y-2 mt-4">
+                                {result.artifacts.map((artifact, idx) => renderArtifact(artifact, idx))}
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Empty State */}
+          {!comparison && !loading && (
+            <div className="flex flex-col items-center justify-center py-16 text-center">
+              <TrendingUp className="text-yellow-500 mb-4" size={64} />
+              <h3 className="text-2xl font-bold text-white mb-2">Ready to Compare Models</h3>
+              <p className="text-gray-400 max-w-md">
+                Select at least 2 models, enter your prompt, and optionally attach files to see side-by-side AI responses
+              </p>
+            </div>
+          )}
         </div>
-      )}
+      </div>
     </div>
   );
 }
