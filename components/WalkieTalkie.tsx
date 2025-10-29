@@ -364,7 +364,7 @@ export default function WalkieTalkie() {
         {(isProcessing || isPlaying) && (
           <div className="cookin-logo-pulse">
             <img
-              src="/logos/cookin.png"
+              src="https://image2url.com/images/1761721248098-5fa26a0f-2749-420e-9c93-982f257e4b9e.png"
               alt="Cookin' Knowledge"
               className="cookin-logo-animated"
             />
