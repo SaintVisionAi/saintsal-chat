@@ -10,9 +10,22 @@ const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 export async function POST(req: Request) {
   try {
+    // 🔐 CHECK USER AUTHENTICATION
+    const cookies = req.headers.get('cookie') || '';
+    const authCookieMatch = cookies.match(/saintsal_auth=([^;]+)/) || cookies.match(/saintsal_session=([^;]+)/);
+    const userId = authCookieMatch ? authCookieMatch[1] : null;
+
+    if (!userId) {
+      console.log('❌ [FILE-UPLOAD] No auth cookie - user not authenticated');
+      return NextResponse.json(
+        { error: "Authentication required" },
+        { status: 401 }
+      );
+    }
+    console.log(`🔐 [FILE-UPLOAD] User authenticated: ${userId}`);
+
     const formData = await req.formData();
     const file = formData.get("file") as File;
-    const userId = formData.get("userId") as string;
 
     if (!file) {
       return NextResponse.json(
@@ -94,7 +107,7 @@ export async function POST(req: Request) {
     const files = db.collection("files");
 
     const result = await files.insertOne({
-      userId: userId || "anonymous",
+      userId: userId,
       fileName,
       fileType,
       fileSize,
@@ -122,15 +135,19 @@ export async function POST(req: Request) {
 // Get user's files
 export async function GET(req: Request) {
   try {
-    const { searchParams } = new URL(req.url);
-    const userId = searchParams.get("userId");
+    // 🔐 CHECK USER AUTHENTICATION
+    const cookies = req.headers.get('cookie') || '';
+    const authCookieMatch = cookies.match(/saintsal_auth=([^;]+)/) || cookies.match(/saintsal_session=([^;]+)/);
+    const userId = authCookieMatch ? authCookieMatch[1] : null;
 
     if (!userId) {
+      console.log('❌ [FILE-GET] No auth cookie - user not authenticated');
       return NextResponse.json(
-        { error: "User ID required" },
-        { status: 400 }
+        { error: "Authentication required" },
+        { status: 401 }
       );
     }
+    console.log(`🔐 [FILE-GET] User authenticated: ${userId}`);
 
     const db = await getDb();
     const files = db.collection("files");

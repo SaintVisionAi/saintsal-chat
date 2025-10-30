@@ -19,6 +19,20 @@ interface ModelResponse {
 
 export async function POST(req: Request) {
   try {
+    // 🔐 CHECK USER AUTHENTICATION
+    const cookies = req.headers.get('cookie') || '';
+    const authCookieMatch = cookies.match(/saintsal_auth=([^;]+)/) || cookies.match(/saintsal_session=([^;]+)/);
+    const authCookie = authCookieMatch ? authCookieMatch[1] : null;
+
+    if (!authCookie) {
+      console.log('❌ [COMPARE] No auth cookie - user not authenticated');
+      return NextResponse.json(
+        { error: "Authentication required" },
+        { status: 401 }
+      );
+    }
+    console.log(`🔐 [COMPARE] User authenticated: ${authCookie}`);
+
     const { prompt, models = ["gpt-5-core", "claude-sonnet-4", "grok-3"] } = await req.json();
 
     if (!prompt) {

@@ -1,5 +1,6 @@
 'use client';
 import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   Plus,
   MessageSquare,
@@ -10,7 +11,8 @@ import {
   Terminal,
   ChevronLeft,
   ChevronRight,
-  Mic
+  Mic,
+  LogOut
 } from 'lucide-react';
 
 interface Chat {
@@ -36,8 +38,21 @@ export default function Sidebar({
   currentChatId,
   currentView = 'chat'
 }: SidebarProps) {
+  const router = useRouter();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [activeTab, setActiveTab] = useState<'chats' | 'files' | 'artifacts' | 'code'>('chats');
+
+  const handleLogout = async () => {
+    try {
+      await fetch('/api/auth/logout', {
+        method: 'POST'
+      });
+      // Redirect to splash page
+      router.push('/splash');
+    } catch (err) {
+      console.error('Logout error:', err);
+    }
+  };
 
   // Mock chat history - replace with actual data from MongoDB
   const [chats, setChats] = useState<Chat[]>([
@@ -259,6 +274,10 @@ export default function Sidebar({
           <Terminal size={16} />
           <span>Open Console</span>
         </a>
+        <button onClick={handleLogout} className="console-link" style={{ width: '100%', textAlign: 'left' }}>
+          <LogOut size={16} />
+          <span>Logout</span>
+        </button>
       </div>
     </div>
   );
