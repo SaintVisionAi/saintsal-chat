@@ -5,9 +5,9 @@ import Sidebar from '../components/Sidebar';
 import ChatWindowEnhanced from '../components/ChatWindowEnhanced';
 import Playground from '../components/Playground';
 import WalkieTalkie from '../components/WalkieTalkie';
-import ModelComparison from '../components/ModelComparison';
+// import SupermanSal from '../components/SupermanSal';
 
-type ViewType = 'chat' | 'playground' | 'walkie' | 'compare';
+type ViewType = 'chat' | 'playground' | 'walkie';
 
 export default function Page() {
   const router = useRouter();
@@ -80,7 +80,7 @@ export default function Page() {
       {currentView === 'chat' && <ChatWindowEnhanced chatId={currentChatId} />}
       {currentView === 'playground' && <Playground />}
       {currentView === 'walkie' && <WalkieTalkie />}
-      {currentView === 'compare' && <ModelComparison />}
+      {/* {currentView === 'superman' && <SupermanSal />} */}
     </div>
   );
 }

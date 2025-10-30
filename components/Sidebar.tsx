@@ -12,7 +12,8 @@ import {
   ChevronLeft,
   ChevronRight,
   Mic,
-  LogOut
+  LogOut,
+  Zap
 } from 'lucide-react';
 
 interface Chat {
@@ -21,7 +22,7 @@ interface Chat {
   timestamp: Date;
 }
 
-type ViewType = 'chat' | 'playground' | 'walkie' | 'compare';
+type ViewType = 'chat' | 'playground' | 'walkie' | 'superman';
 
 interface SidebarProps {
   onNewChat: () => void;
@@ -60,13 +61,16 @@ export default function Sidebar({
   ]);
 
   const tools = [
+    // {
+    //   name: 'SUPERMAN SAL 🦸‍♂️',
+    //   icon: Zap,
+    //   action: () => onViewChange('superman'),
+    //   special: true // Mark as special/featured
+    // },
     {
-      name: 'Code Agent',
-      icon: Code2,
-      action: () => {
-        onViewChange('chat');
-        // Trigger will be handled by parent component
-      }
+      name: 'Chat',
+      icon: MessageSquare,
+      action: () => onViewChange('chat')
     },
     {
       name: 'Voice Assistant',
@@ -74,14 +78,9 @@ export default function Sidebar({
       action: () => onViewChange('walkie')
     },
     {
-      name: 'Model Playground',
-      icon: FileText,
+      name: 'Playground',
+      icon: Code2,
       action: () => onViewChange('playground')
-    },
-    {
-      name: 'Compare Models',
-      icon: Wrench,
-      action: () => onViewChange('compare')
     },
   ];
 
@@ -150,13 +149,6 @@ export default function Sidebar({
         >
           <Mic size={16} />
           <span>Walkie Talkie</span>
-        </button>
-        <button
-          className={`view-btn ${currentView === 'compare' ? 'active' : ''}`}
-          onClick={() => onViewChange('compare')}
-        >
-          <Box size={16} />
-          <span>Compare Models</span>
         </button>
       </div>
 
