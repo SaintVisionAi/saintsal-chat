@@ -342,7 +342,7 @@ export default function SupermanSal() {
     try {
       // Request screen sharing
       const stream = await navigator.mediaDevices.getDisplayMedia({
-        video: { mediaSource: 'screen' as any },
+        video: true,
         audio: false
       });
 
