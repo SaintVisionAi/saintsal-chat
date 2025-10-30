@@ -15,17 +15,60 @@ export default function SignUpPage() {
     role: '',
     plan: 'professional'
   })
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    // Handle signup logic
-    router.push('/playground')
+    setError('')
+
+    // Validate passwords match
+    if (formData.password !== formData.confirmPassword) {
+      setError('Passwords do not match')
+      return
+    }
+
+    // Validate password length
+    if (formData.password.length < 8) {
+      setError('Password must be at least 8 characters')
+      return
+    }
+
+    setLoading(true)
+
+    try {
+      const response = await fetch('/api/auth/signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: formData.email,
+          password: formData.password,
+          companyName: formData.companyName,
+          role: formData.role,
+          name: formData.companyName // Use company name as user name
+        })
+      })
+
+      const data = await response.json()
+
+      if (response.ok && data.success) {
+        // Successfully signed up, redirect to main app
+        router.push('/')
+      } else {
+        setError(data.error || 'Signup failed. Please try again.')
+      }
+    } catch (err) {
+      console.error('Signup error:', err)
+      setError('An error occurred. Please try again.')
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
     <>
       <EnterpriseHeader />
-      
+
       <div className="min-h-screen bg-black text-white pt-20">
         <section className="py-20 px-8">
           <div className="max-w-lg mx-auto">
@@ -47,6 +90,12 @@ export default function SignUpPage() {
 
             <div className="glass rounded-2xl p-8">
               <form onSubmit={handleSubmit} className="space-y-6">
+                {error && (
+                  <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-lg text-red-400 text-sm">
+                    {error}
+                  </div>
+                )}
+
                 <div>
                   <label className="block text-sm font-medium text-white mb-2">
                     Email Address
@@ -58,6 +107,7 @@ export default function SignUpPage() {
                     className="w-full p-3 bg-black/50 border border-white/20 rounded-lg text-white focus:outline-none focus:border-saint-yellow-500"
                     placeholder="you@company.com"
                     required
+                    disabled={loading}
                   />
                 </div>
 
@@ -72,6 +122,7 @@ export default function SignUpPage() {
                     className="w-full p-3 bg-black/50 border border-white/20 rounded-lg text-white focus:outline-none focus:border-saint-yellow-500"
                     placeholder="Your Company"
                     required
+                    disabled={loading}
                   />
                 </div>
 
@@ -84,6 +135,7 @@ export default function SignUpPage() {
                     onChange={(e) => setFormData({...formData, role: e.target.value})}
                     className="w-full p-3 bg-black/50 border border-white/20 rounded-lg text-white focus:outline-none focus:border-saint-yellow-500"
                     required
+                    disabled={loading}
                   >
                     <option value="">Select your role</option>
                     <option value="ceo">CEO/Founder</option>
@@ -103,8 +155,9 @@ export default function SignUpPage() {
                     value={formData.password}
                     onChange={(e) => setFormData({...formData, password: e.target.value})}
                     className="w-full p-3 bg-black/50 border border-white/20 rounded-lg text-white focus:outline-none focus:border-saint-yellow-500"
-                    placeholder="Create secure password"
+                    placeholder="Create secure password (min 8 characters)"
                     required
+                    disabled={loading}
                   />
                 </div>
 
@@ -119,33 +172,35 @@ export default function SignUpPage() {
                     className="w-full p-3 bg-black/50 border border-white/20 rounded-lg text-white focus:outline-none focus:border-saint-yellow-500"
                     placeholder="Confirm password"
                     required
+                    disabled={loading}
                   />
                 </div>
 
                 <div className="glass-yellow rounded-lg p-4">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-white font-semibold">Professional Plan</span>
-                    <span className="text-saint-yellow-400 font-bold">$97/month</span>
+                    <span className="text-white font-semibold">Free Plan</span>
+                    <span className="text-saint-yellow-400 font-bold">$0/month</span>
                   </div>
                   <p className="text-xs text-gray-300">
-                    Unlimited AI conversations, HACP™ protocol, priority support, and enterprise integrations.
+                    Start with 50 messages/month, 10 voice minutes, and basic features. Upgrade anytime!
                   </p>
                 </div>
 
                 <button
                   type="submit"
                   className="w-full btn-primary"
+                  disabled={loading}
                 >
-                  🚀 Start Free Trial (14 Days)
+                  {loading ? 'Creating Account...' : '🚀 Create Free Account'}
                 </button>
 
                 <p className="text-xs text-gray-400 text-center">
                   By signing up, you agree to our{' '}
-                  <button onClick={() => router.push('/terms')} className="text-saint-yellow-500 hover:underline">
+                  <button type="button" onClick={() => router.push('/terms')} className="text-saint-yellow-500 hover:underline">
                     Terms of Service
                   </button>{' '}
                   and{' '}
-                  <button onClick={() => router.push('/privacy')} className="text-saint-yellow-500 hover:underline">
+                  <button type="button" onClick={() => router.push('/privacy')} className="text-saint-yellow-500 hover:underline">
                     Privacy Policy
                   </button>
                 </p>
@@ -155,7 +210,7 @@ export default function SignUpPage() {
             <div className="text-center mt-6">
               <p className="text-gray-400">
                 Already have an account?{' '}
-                <button 
+                <button
                   onClick={() => router.push('/signin')}
                   className="text-saint-yellow-500 hover:underline"
                 >
