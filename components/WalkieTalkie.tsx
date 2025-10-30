@@ -234,33 +234,59 @@ export default function WalkieTalkie() {
   };
 
   const playResponse = async (text: string) => {
+    console.log('[WALKIE-TTS] 🎤 Starting TTS for text:', text.substring(0, 50) + '...');
     try {
       // Get TTS audio from ElevenLabs
+      console.log('[WALKIE-TTS] 📡 Calling /api/elevenlabs/tts...');
       const response = await fetch('/api/elevenlabs/tts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text }),
       });
 
+      console.log('[WALKIE-TTS] 📊 API response status:', response.status);
+      console.log('[WALKIE-TTS] 📋 Content-Type:', response.headers.get('Content-Type'));
+
       if (!response.ok) {
-        throw new Error('TTS failed');
+        const errorText = await response.text();
+        console.error('[WALKIE-TTS] ❌ API error:', errorText);
+        throw new Error('TTS API failed: ' + errorText);
       }
 
       const audioBlob = await response.blob();
+      console.log('[WALKIE-TTS] 🎵 Audio blob received - Size:', audioBlob.size, 'bytes, Type:', audioBlob.type);
+
+      if (audioBlob.size === 0) {
+        throw new Error('Received empty audio blob');
+      }
+
       const audioUrl = URL.createObjectURL(audioBlob);
+      console.log('[WALKIE-TTS] 🔗 Audio URL created:', audioUrl.substring(0, 50));
 
       // Play audio
       const audio = new Audio(audioUrl);
       audioElementRef.current = audio;
+      console.log('[WALKIE-TTS] 🔊 Audio element created');
 
       audio.onended = () => {
+        console.log('[WALKIE-TTS] ✅ Audio playback ended');
         setIsPlaying(false);
         URL.revokeObjectURL(audioUrl);
       };
 
+      audio.onerror = (e) => {
+        console.error('[WALKIE-TTS] ❌ Audio element error:', e);
+        alert('Audio playback error - check console for details');
+        setIsPlaying(false);
+      };
+
+      console.log('[WALKIE-TTS] ▶️ Attempting to play audio...');
       await audio.play();
+      console.log('[WALKIE-TTS] 🎉 Audio playback started successfully!');
     } catch (err) {
-      console.error('Audio playback error:', err);
+      console.error('[WALKIE-TTS] 💥 Audio playback error:', err);
+      const errorMsg = err instanceof Error ? err.message : String(err);
+      alert('TTS Error: ' + errorMsg + '\n\nCheck browser console for details.');
       setIsPlaying(false);
     }
   };
