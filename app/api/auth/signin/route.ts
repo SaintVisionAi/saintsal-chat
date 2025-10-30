@@ -47,8 +47,15 @@ export async function POST(req: Request) {
       plan: user.plan || "free",
     });
 
-    // Set cookie
-    response.cookies.set("saintsal_session", user._id.toString(), {
+    // Set auth cookies (matching /api/auth/login)
+    response.cookies.set("saintsal_auth", user._id.toString(), {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 60 * 60 * 24 * 30, // 30 days
+    });
+
+    response.cookies.set("saintsal_user_email", user.email.toLowerCase(), {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",

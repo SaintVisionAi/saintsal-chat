@@ -9,14 +9,33 @@ import Stripe from 'stripe';
 import { getDb } from '../../../../lib/mongodb';
 import { getPlanLimits, PRICING_TIERS } from '../../../../lib/mongodb-schema';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2024-12-18.acacia',
-});
+const stripeKey = process.env.STRIPE_SECRET_KEY || process.env.STRIPE_API_KEY;
+const stripe = stripeKey
+  ? new Stripe(stripeKey, {
+      apiVersion: '2025-02-24.acacia',
+    })
+  : null;
 
-const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!;
+const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET || '';
 
 export async function POST(req: NextRequest) {
   console.log('🎯 [STRIPE WEBHOOK] Incoming webhook request...');
+
+  if (!stripe) {
+    console.error('❌ [STRIPE WEBHOOK] Stripe not configured');
+    return NextResponse.json(
+      { error: 'Stripe not configured' },
+      { status: 500 }
+    );
+  }
+
+  if (!webhookSecret) {
+    console.error('❌ [STRIPE WEBHOOK] Webhook secret not configured');
+    return NextResponse.json(
+      { error: 'Webhook secret not configured' },
+      { status: 500 }
+    );
+  }
 
   try {
     const body = await req.text();

@@ -1,6 +1,5 @@
 # Dependencies
 node_modules/
-package-lock.json
 
 # Temporary/test directories
 _my-mongodb-app/
@@ -29,3 +28,4 @@ build/
 .next/
 .vercel
 .env*.local
+tsconfig.tsbuildinfo

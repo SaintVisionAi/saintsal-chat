@@ -1,9 +1,10 @@
 /**
  * app/api/admin/packages/route.ts
- * Admin Package/Tier Management
+ * Admin Package/Tier Management - Synced with Stripe
  */
 import { NextRequest, NextResponse } from "next/server";
 import { MongoClient, ObjectId } from "mongodb";
+import { getStripeProducts, syncStripeProductsToMongo } from "@/lib/stripe";
 
 const mongoUri = process.env.MONGODB_URI!;
 let cachedClient: MongoClient | null = null;
@@ -21,58 +22,43 @@ function isAdmin(req: NextRequest): boolean {
   return session?.value === "admin-authenticated";
 }
 
-// GET - List all packages
+// GET - List all packages (from Stripe)
 export async function GET(req: NextRequest) {
   try {
     if (!isAdmin(req)) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const client = await getMongoClient();
-    const db = client.db("saintsal");
-    const packages = db.collection("packages");
+    const { searchParams } = new URL(req.url);
+    const sync = searchParams.get("sync") === "true";
 
-    const packagesList = await packages.find({}).sort({ price: 1 }).toArray();
-
-    // If no packages exist, return default structure
-    if (packagesList.length === 0) {
+    // Option to force sync from Stripe
+    if (sync) {
+      const client = await getMongoClient();
+      const products = await syncStripeProductsToMongo(client);
       return NextResponse.json({
         success: true,
-        packages: [
-          {
-            _id: "free",
-            name: "Free",
-            price: 0,
-            features: ["Basic chat", "1,000 messages/month", "Standard support"],
-            limits: { messages: 1000, tokens: 500000 },
-          },
-          {
-            _id: "pro",
-            name: "Pro",
-            price: 29,
-            features: [
-              "Unlimited chat",
-              "Voice features",
-              "Priority support",
-              "Code generation",
-              "File uploads",
-            ],
-            limits: { messages: -1, tokens: 5000000 },
-          },
-          {
-            _id: "enterprise",
-            name: "Enterprise",
-            price: 199,
-            features: [
-              "Everything in Pro",
-              "Dedicated support",
-              "Custom integrations",
-              "SLA guarantees",
-              "Team management",
-            ],
-            limits: { messages: -1, tokens: -1 },
-          },
-        ],
+        packages: products,
+        synced: true,
+        message: "Packages synced from Stripe",
+      });
+    }
+
+    // Get from MongoDB (cached Stripe data)
+    const client = await getMongoClient();
+    const db = client.db(process.env.MONGODB_DB || "saintsal_db");
+    const packages = db.collection("packages");
+
+    let packagesList = await packages.find({}).sort({ price: 1 }).toArray();
+
+    // If no packages in DB, fetch from Stripe and cache
+    if (packagesList.length === 0) {
+      const products = await syncStripeProductsToMongo(client);
+      return NextResponse.json({
+        success: true,
+        packages: products,
+        synced: true,
+        message: "First sync from Stripe completed",
       });
     }
 
@@ -97,7 +83,7 @@ export async function POST(req: NextRequest) {
     }
 
     const client = await getMongoClient();
-    const db = client.db("saintsal");
+    const db = client.db(process.env.MONGODB_DB || "saintsal_db");
     const packages = db.collection("packages");
 
     const result = await packages.insertOne({
@@ -133,7 +119,7 @@ export async function PATCH(req: NextRequest) {
     }
 
     const client = await getMongoClient();
-    const db = client.db("saintsal");
+    const db = client.db(process.env.MONGODB_DB || "saintsal_db");
     const packages = db.collection("packages");
 
     const updateData: any = {};
@@ -179,7 +165,7 @@ export async function DELETE(req: NextRequest) {
     }
 
     const client = await getMongoClient();
-    const db = client.db("saintsal");
+    const db = client.db(process.env.MONGODB_DB || "saintsal_db");
     const packages = db.collection("packages");
 
     const result = await packages.deleteOne({ _id: new ObjectId(packageId) });

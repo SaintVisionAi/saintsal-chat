@@ -18,6 +18,20 @@ const GHL_API_URL = "https://rest.gohighlevel.com/v1";
 
 export async function POST(req: NextRequest) {
   try {
+    // 🔐 CHECK USER AUTHENTICATION
+    const cookies = req.headers.get('cookie') || '';
+    const authCookieMatch = cookies.match(/saintsal_auth=([^;]+)/) || cookies.match(/saintsal_session=([^;]+)/);
+    const authCookie = authCookieMatch ? authCookieMatch[1] : null;
+
+    if (!authCookie) {
+      console.log('❌ [GHL] No auth cookie - user not authenticated');
+      return NextResponse.json(
+        { error: "Authentication required" },
+        { status: 401 }
+      );
+    }
+    console.log(`🔐 [GHL] User authenticated: ${authCookie}`);
+
     if (!GHL_API_KEY) {
       return NextResponse.json({
         success: false,

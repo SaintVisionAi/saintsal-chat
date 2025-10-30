@@ -4,7 +4,6 @@ import { Anthropic } from '@anthropic-ai/sdk';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { CosmosClient } from '@azure/cosmos';
 import { SearchClient, AzureKeyCredential } from '@azure/search-documents';
-import fetch from 'node-fetch';
 
 dotenv.config();
 

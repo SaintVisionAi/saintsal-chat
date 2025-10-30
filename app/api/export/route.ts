@@ -20,6 +20,20 @@ interface ExportRequest {
 
 export async function POST(req: Request) {
   try {
+    // 🔐 CHECK USER AUTHENTICATION
+    const cookies = req.headers.get('cookie') || '';
+    const authCookieMatch = cookies.match(/saintsal_auth=([^;]+)/) || cookies.match(/saintsal_session=([^;]+)/);
+    const authCookie = authCookieMatch ? authCookieMatch[1] : null;
+
+    if (!authCookie) {
+      console.log('❌ [EXPORT] No auth cookie - user not authenticated');
+      return NextResponse.json(
+        { error: "Authentication required" },
+        { status: 401 }
+      );
+    }
+    console.log(`🔐 [EXPORT] User authenticated: ${authCookie}`);
+
     const { chatId, format, messages, title } = (await req.json()) as ExportRequest;
 
     if (!messages || messages.length === 0) {
@@ -127,12 +141,25 @@ function generatePlainText(messages: Message[], title: string): string {
 // GET endpoint to retrieve chat history for export
 export async function GET(req: Request) {
   try {
+    // 🔐 CHECK USER AUTHENTICATION
+    const cookies = req.headers.get('cookie') || '';
+    const authCookieMatch = cookies.match(/saintsal_auth=([^;]+)/) || cookies.match(/saintsal_session=([^;]+)/);
+    const userId = authCookieMatch ? authCookieMatch[1] : null;
+
+    if (!userId) {
+      console.log('❌ [EXPORT-GET] No auth cookie - user not authenticated');
+      return NextResponse.json(
+        { error: "Authentication required" },
+        { status: 401 }
+      );
+    }
+    console.log(`🔐 [EXPORT-GET] User authenticated: ${userId}`);
+
     const { searchParams } = new URL(req.url);
     const chatId = searchParams.get("chatId");
-    const userId = searchParams.get("userId");
 
-    if (!chatId || !userId) {
-      return NextResponse.json({ error: "chatId and userId are required" }, { status: 400 });
+    if (!chatId) {
+      return NextResponse.json({ error: "chatId is required" }, { status: 400 });
     }
 
     const db = await getDb();

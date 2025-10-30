@@ -30,7 +30,7 @@ export async function GET(req: NextRequest) {
     }
 
     const client = await getMongoClient();
-    const db = client.db("saintsal");
+    const db = client.db(process.env.MONGODB_DB || "saintsal_db");
     const users = db.collection("users");
 
     const usersList = await users
@@ -60,7 +60,7 @@ export async function POST(req: NextRequest) {
     }
 
     const client = await getMongoClient();
-    const db = client.db("saintsal");
+    const db = client.db(process.env.MONGODB_DB || "saintsal_db");
     const users = db.collection("users");
 
     // Check if user already exists
@@ -109,7 +109,7 @@ export async function PATCH(req: NextRequest) {
     }
 
     const client = await getMongoClient();
-    const db = client.db("saintsal");
+    const db = client.db(process.env.MONGODB_DB || "saintsal_db");
     const users = db.collection("users");
 
     const updateData: any = {};
@@ -158,7 +158,7 @@ export async function DELETE(req: NextRequest) {
     }
 
     const client = await getMongoClient();
-    const db = client.db("saintsal");
+    const db = client.db(process.env.MONGODB_DB || "saintsal_db");
     const users = db.collection("users");
 
     const result = await users.deleteOne({ _id: new ObjectId(userId) });
