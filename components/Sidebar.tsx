@@ -61,12 +61,12 @@ export default function Sidebar({
   ]);
 
   const tools = [
-    {
-      name: 'SUPERMAN SAL 🦸‍♂️',
-      icon: Zap,
-      action: () => onViewChange('superman'),
-      special: true // Mark as special/featured
-    },
+    // {
+    //   name: 'SUPERMAN SAL 🦸‍♂️',
+    //   icon: Zap,
+    //   action: () => onViewChange('superman'),
+    //   special: true // Mark as special/featured
+    // },
     {
       name: 'Chat',
       icon: MessageSquare,
@@ -129,13 +129,6 @@ export default function Sidebar({
 
       {/* View Navigation */}
       <div className="sidebar-views">
-        <button
-          className={`view-btn ${currentView === 'superman' ? 'active' : ''}`}
-          onClick={() => onViewChange('superman')}
-        >
-          <Zap size={16} />
-          <span>SUPERMAN SAL</span>
-        </button>
         <button
           className={`view-btn ${currentView === 'chat' ? 'active' : ''}`}
           onClick={() => onViewChange('chat')}
