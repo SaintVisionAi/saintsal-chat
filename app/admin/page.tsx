@@ -47,6 +47,16 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     checkAuth();
+
+    // Prevent browser back button
+    window.history.pushState(null, '', window.location.href);
+    window.addEventListener('popstate', () => {
+      window.history.pushState(null, '', window.location.href);
+    });
+
+    return () => {
+      window.removeEventListener('popstate', () => {});
+    };
   }, []);
 
   const checkAuth = async () => {
@@ -91,6 +101,9 @@ export default function AdminDashboard() {
   };
 
   const handleLogout = async () => {
+    if (!confirm('Are you sure you want to logout from Admin Panel?')) {
+      return;
+    }
     await fetch('/api/admin/auth', { method: 'DELETE' });
     setAuthenticated(false);
     setMetrics(null);
