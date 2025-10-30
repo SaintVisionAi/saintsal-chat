@@ -7,7 +7,7 @@ import Playground from '../components/Playground';
 import WalkieTalkie from '../components/WalkieTalkie';
 // import SupermanSal from '../components/SupermanSal';
 
-type ViewType = 'chat' | 'playground' | 'walkie';
+type ViewType = 'chat' | 'playground' | 'walkie' | 'superman';
 
 export default function Page() {
   const router = useRouter();
