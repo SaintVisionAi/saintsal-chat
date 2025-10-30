@@ -7,6 +7,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
+    "lint": "next lint",
     "backend": "node backend/superman-complete.mjs",
     "backend:dev": "node --watch backend/superman-complete.mjs",
     "setup-vector-index": "node scripts/setup-mongodb-vector-index.mjs"
@@ -40,19 +41,20 @@
     "clsx": "^2.0.0",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
-    "elevenlabs": "^1.59.0",
+    "@elevenlabs/elevenlabs-js": "^2.20.1",
     "express": "^4.21.2",
     "framer-motion": "^10.16.4",
     "googleapis": "^164.1.0",
     "lucide-react": "^0.292.0",
     "microsoft-cognitiveservices-speech-sdk": "^1.42.0",
     "mongodb": "^6.20.0",
-    "next": "14.0.3",
+    "next": "^14.2.33",
     "openai": "^4.104.0",
     "pg": "^8.16.3",
     "postcss": "^8.4.31",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
+    "stripe": "^17.4.0",
     "tailwind-merge": "^2.0.0",
     "tailwindcss": "^3.3.5",
     "typescript": "^5.2.2"
@@ -60,7 +62,7 @@
   "devDependencies": {
     "@types/pg": "^8.15.6",
     "eslint": "^8.53.0",
-    "eslint-config-next": "14.0.3"
+    "eslint-config-next": "^14.2.33"
   },
   "engines": {
     "node": ">=18.0.0"
