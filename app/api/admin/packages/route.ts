@@ -29,7 +29,7 @@ export async function GET(req: NextRequest) {
     }
 
     const client = await getMongoClient();
-    const db = client.db("saintsal");
+    const db = client.db(process.env.MONGODB_DB || "saintsal_db");
     const packages = db.collection("packages");
 
     const packagesList = await packages.find({}).sort({ price: 1 }).toArray();
@@ -97,7 +97,7 @@ export async function POST(req: NextRequest) {
     }
 
     const client = await getMongoClient();
-    const db = client.db("saintsal");
+    const db = client.db(process.env.MONGODB_DB || "saintsal_db");
     const packages = db.collection("packages");
 
     const result = await packages.insertOne({
@@ -133,7 +133,7 @@ export async function PATCH(req: NextRequest) {
     }
 
     const client = await getMongoClient();
-    const db = client.db("saintsal");
+    const db = client.db(process.env.MONGODB_DB || "saintsal_db");
     const packages = db.collection("packages");
 
     const updateData: any = {};
@@ -179,7 +179,7 @@ export async function DELETE(req: NextRequest) {
     }
 
     const client = await getMongoClient();
-    const db = client.db("saintsal");
+    const db = client.db(process.env.MONGODB_DB || "saintsal_db");
     const packages = db.collection("packages");
 
     const result = await packages.deleteOne({ _id: new ObjectId(packageId) });

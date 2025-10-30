@@ -30,7 +30,7 @@ export async function GET(req: NextRequest) {
     }
 
     const client = await getMongoClient();
-    const db = client.db("saintsal");
+    const db = client.db(process.env.MONGODB_DB || "saintsal_db");
 
     // Parallel queries for dashboard metrics
     const [
