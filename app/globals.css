@@ -4665,3 +4665,26 @@ body {
     display: none;
   }
 }
+
+/* VISION BUTTON - Special highlight */
+.superman-vision-btn {
+  background: linear-gradient(135deg, rgba(138, 43, 226, 0.15), rgba(138, 43, 226, 0.05));
+  border-color: rgba(138, 43, 226, 0.3);
+  position: relative;
+  overflow: hidden;
+}
+
+.superman-vision-btn::before {
+  content: '👁️';
+  position: absolute;
+  top: -10px;
+  right: -10px;
+  font-size: 24px;
+  opacity: 0.1;
+}
+
+.superman-vision-btn:hover {
+  background: linear-gradient(135deg, rgba(138, 43, 226, 0.25), rgba(138, 43, 226, 0.1));
+  border-color: #BB86FC;
+  color: #BB86FC;
+}

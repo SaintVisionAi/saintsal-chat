@@ -13,7 +13,8 @@ import {
   FileText,
   Image as ImageIcon,
   Sparkles,
-  Eye
+  Eye,
+  Camera
 } from 'lucide-react';
 
 interface Message {
@@ -41,6 +42,7 @@ export default function SupermanSal() {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
+  const screenshotInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -188,17 +190,60 @@ export default function SupermanSal() {
     }
   };
 
-  const handleAnalyzePage = async () => {
-    setIsLoading(true);
-    const analysisMessage: Message = {
-      role: 'user',
-      content: '🔍 Analyze this page and tell me what you see',
-      timestamp: new Date()
-    };
-    setMessages(prev => [...prev, analysisMessage]);
+  const handleScreenshotUpload = () => {
+    screenshotInputRef.current?.click();
+  };
 
-    // Continue with chat API call...
-    setIsLoading(false);
+  const handleScreenshotSelected = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsLoading(true);
+    setMessages(prev => [...prev, {
+      role: 'user',
+      content: `📸 Analyzing screenshot: ${file.name}`,
+      timestamp: new Date()
+    }]);
+
+    try {
+      const formData = new FormData();
+      formData.append('image', file);
+      formData.append('prompt', `Analyze this screenshot in detail. Describe what you see, including any text, UI elements, layout, colors, and notable features. Also mention what kind of website or application this appears to be.`);
+
+      const response = await fetch('/api/superman/vision', {
+        method: 'POST',
+        body: formData,
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        setMessages(prev => [...prev, {
+          role: 'assistant',
+          content: `👁️ **Vision Analysis:**\n\n${data.analysis}`,
+          timestamp: new Date()
+        }]);
+      } else {
+        throw new Error(data.error || 'Vision analysis failed');
+      }
+    } catch (err) {
+      console.error('Screenshot analysis error:', err);
+      setMessages(prev => [...prev, {
+        role: 'assistant',
+        content: `❌ Failed to analyze screenshot: ${err instanceof Error ? err.message : String(err)}`,
+        timestamp: new Date()
+      }]);
+    } finally {
+      setIsLoading(false);
+      // Reset file input
+      if (screenshotInputRef.current) {
+        screenshotInputRef.current.value = '';
+      }
+    }
+  };
+
+  const handleAnalyzePage = async () => {
+    setInputMessage(`Analyze the page I'm viewing: ${currentUrl}\n\nWhat can you tell me about this website? What is it for?`);
   };
 
   return (
@@ -232,14 +277,31 @@ export default function SupermanSal() {
             <span>Search Web</span>
           </button>
           <button
+            onClick={handleScreenshotUpload}
+            className="superman-action-btn superman-vision-btn"
+            title="Upload Screenshot for Vision Analysis"
+          >
+            <Camera size={18} />
+            <span>See Screenshot</span>
+          </button>
+          <button
             onClick={handleAnalyzePage}
             className="superman-action-btn"
             title="Analyze Page"
           >
             <Eye size={18} />
-            <span>Analyze</span>
+            <span>Analyze URL</span>
           </button>
         </div>
+
+        {/* Hidden file input for screenshots */}
+        <input
+          ref={screenshotInputRef}
+          type="file"
+          accept="image/*"
+          onChange={handleScreenshotSelected}
+          style={{ display: 'none' }}
+        />
       </div>
 
       {/* SPLIT VIEW CONTAINER */}
