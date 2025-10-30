@@ -6,6 +6,20 @@ import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
   try {
+    // 🔐 CHECK USER AUTHENTICATION
+    const cookies = req.headers.get('cookie') || '';
+    const authCookieMatch = cookies.match(/saintsal_auth=([^;]+)/) || cookies.match(/saintsal_session=([^;]+)/);
+    const authCookie = authCookieMatch ? authCookieMatch[1] : null;
+
+    if (!authCookie) {
+      console.log('❌ [ELEVENLABS-TTS] No auth cookie - user not authenticated');
+      return NextResponse.json(
+        { error: "Authentication required" },
+        { status: 401 }
+      );
+    }
+    console.log(`🔐 [ELEVENLABS-TTS] User authenticated: ${authCookie}`);
+
     const { text, voice = "EXAVITQu4vr4xnSDxMaL" } = await req.json(); // Default: Sarah (ElevenLabs)
     if (!text) return NextResponse.json({ error: "Missing text" }, { status: 400 });
 

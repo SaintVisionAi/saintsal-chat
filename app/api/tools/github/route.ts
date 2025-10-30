@@ -16,6 +16,20 @@ interface GitHubFileContent {
 
 export async function POST(req: NextRequest) {
   try {
+    // 🔐 CHECK USER AUTHENTICATION
+    const cookies = req.headers.get('cookie') || '';
+    const authCookieMatch = cookies.match(/saintsal_auth=([^;]+)/) || cookies.match(/saintsal_session=([^;]+)/);
+    const authCookie = authCookieMatch ? authCookieMatch[1] : null;
+
+    if (!authCookie) {
+      console.log('❌ [TOOLS-GITHUB] No auth cookie - user not authenticated');
+      return NextResponse.json(
+        { error: "Authentication required" },
+        { status: 401 }
+      );
+    }
+    console.log(`🔐 [TOOLS-GITHUB] User authenticated: ${authCookie}`);
+
     const { action, owner, repo, path = "", branch = "main" } = await req.json();
 
     if (!owner || !repo) {
