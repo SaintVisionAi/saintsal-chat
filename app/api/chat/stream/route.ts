@@ -38,6 +38,20 @@ export async function POST(req: Request) {
   const encoder = new TextEncoder();
 
   try {
+    // 🔐 CHECK USER AUTHENTICATION
+    const cookies = req.headers.get('cookie') || '';
+    const authCookieMatch = cookies.match(/saintsal_auth=([^;]+)/) || cookies.match(/saintsal_session=([^;]+)/);
+    const authCookie = authCookieMatch ? authCookieMatch[1] : null;
+
+    if (!authCookie) {
+      console.log('❌ [CHAT-STREAM] No auth cookie - user not authenticated');
+      return NextResponse.json(
+        { error: "Authentication required" },
+        { status: 401 }
+      );
+    }
+    console.log(`🔐 [CHAT-STREAM] User authenticated: ${authCookie}`);
+
     const body = await req.json();
     const userMsg: string = body.message || "";
 

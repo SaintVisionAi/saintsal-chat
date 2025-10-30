@@ -46,8 +46,8 @@ export async function POST(req: NextRequest) {
     }
     console.log(`📝 [CHAT] Message received (${message.length} chars)`);
 
-    // 🔐 CHECK USER AUTHENTICATION
-    const authCookie = req.cookies.get('saintsal_auth')?.value;
+    // 🔐 CHECK USER AUTHENTICATION (check both cookie names)
+    const authCookie = req.cookies.get('saintsal_auth')?.value || req.cookies.get('saintsal_session')?.value;
     if (!authCookie) {
       console.log('❌ [CHAT] No auth cookie - user not authenticated');
       return new Response(

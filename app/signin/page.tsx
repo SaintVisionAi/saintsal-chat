@@ -11,17 +11,44 @@ export default function SignInPage() {
     email: '',
     password: ''
   })
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    // Handle signin logic
-    router.push('/playground')
+    setError('')
+    setLoading(true)
+
+    try {
+      const response = await fetch('/api/auth/signin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: formData.email,
+          password: formData.password
+        })
+      })
+
+      const data = await response.json()
+
+      if (response.ok && data.success) {
+        // Successfully signed in, redirect to main app
+        router.push('/')
+      } else {
+        setError(data.error || 'Invalid email or password')
+      }
+    } catch (err) {
+      console.error('Sign in error:', err)
+      setError('An error occurred. Please try again.')
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
     <>
       <EnterpriseHeader />
-      
+
       <div className="min-h-screen bg-black text-white pt-20">
         <section className="py-20 px-8">
           <div className="max-w-md mx-auto">
@@ -43,6 +70,12 @@ export default function SignInPage() {
 
             <div className="glass rounded-2xl p-8">
               <form onSubmit={handleSubmit} className="space-y-6">
+                {error && (
+                  <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-lg text-red-400 text-sm">
+                    {error}
+                  </div>
+                )}
+
                 <div>
                   <label className="block text-sm font-medium text-white mb-2">
                     Email Address
@@ -54,6 +87,7 @@ export default function SignInPage() {
                     className="w-full p-3 bg-black/50 border border-white/20 rounded-lg text-white focus:outline-none focus:border-saint-yellow-500"
                     placeholder="you@company.com"
                     required
+                    disabled={loading}
                   />
                 </div>
 
@@ -68,6 +102,7 @@ export default function SignInPage() {
                     className="w-full p-3 bg-black/50 border border-white/20 rounded-lg text-white focus:outline-none focus:border-saint-yellow-500"
                     placeholder="Enter your password"
                     required
+                    disabled={loading}
                   />
                 </div>
 
@@ -91,8 +126,9 @@ export default function SignInPage() {
                 <button
                   type="submit"
                   className="w-full btn-primary"
+                  disabled={loading}
                 >
-                  🚀 Sign In to SaintVision AI
+                  {loading ? 'Signing In...' : '🚀 Sign In to SaintVision AI'}
                 </button>
               </form>
 
@@ -120,7 +156,7 @@ export default function SignInPage() {
             <div className="text-center mt-6">
               <p className="text-gray-400">
                 Don't have an account?{' '}
-                <button 
+                <button
                   onClick={() => router.push('/signup')}
                   className="text-saint-yellow-500 hover:underline"
                 >

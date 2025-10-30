@@ -11,7 +11,8 @@ export async function GET(req: NextRequest) {
   console.log('🔐 [AUTH-CHECK] Starting authentication check...');
 
   try {
-    const authCookie = req.cookies.get('saintsal_auth')?.value;
+    // Check for both cookie names for backwards compatibility
+    const authCookie = req.cookies.get('saintsal_auth')?.value || req.cookies.get('saintsal_session')?.value;
 
     if (!authCookie) {
       console.log('❌ [AUTH-CHECK] No auth cookie found');
