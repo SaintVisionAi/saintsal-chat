@@ -9,7 +9,11 @@
     "start": "next start",
     "backend": "node backend/superman-complete.mjs",
     "backend:dev": "node --watch backend/superman-complete.mjs",
-    "setup-vector-index": "node scripts/setup-mongodb-vector-index.mjs"
+    "setup-vector-index": "node scripts/setup-mongodb-vector-index.mjs",
+    "db:check": "tsx scripts/check-mongodb-connection.ts",
+    "db:init": "tsx scripts/init-mongodb.ts",
+    "db:verify": "tsx scripts/verify-mongodb-setup.ts",
+    "db:setup": "npm run db:check && npm run db:init && npm run db:verify"
   },
   "keywords": [
     "ai",
