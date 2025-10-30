@@ -12,7 +12,8 @@ import {
   ChevronLeft,
   ChevronRight,
   Mic,
-  LogOut
+  LogOut,
+  Zap
 } from 'lucide-react';
 
 interface Chat {
@@ -21,7 +22,7 @@ interface Chat {
   timestamp: Date;
 }
 
-type ViewType = 'chat' | 'playground' | 'walkie' | 'compare';
+type ViewType = 'chat' | 'playground' | 'walkie' | 'compare' | 'superman';
 
 interface SidebarProps {
   onNewChat: () => void;
@@ -60,6 +61,12 @@ export default function Sidebar({
   ]);
 
   const tools = [
+    {
+      name: 'SUPERMAN SAL 🦸‍♂️',
+      icon: Zap,
+      action: () => onViewChange('superman'),
+      special: true // Mark as special/featured
+    },
     {
       name: 'Code Agent',
       icon: Code2,
