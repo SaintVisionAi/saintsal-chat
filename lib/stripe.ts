@@ -5,15 +5,27 @@
 
 import Stripe from 'stripe';
 
-// Initialize Stripe client
-export const stripe = new Stripe(process.env.STRIPE_API_KEY || '', {
-  apiVersion: '2025-02-24.acacia',
-});
+// Initialize Stripe client - only if API key is available
+const apiKey = process.env.STRIPE_API_KEY || process.env.STRIPE_SECRET_KEY;
+
+if (!apiKey && typeof window === 'undefined') {
+  console.warn('⚠️ STRIPE_API_KEY not set - Stripe functionality will be limited');
+}
+
+export const stripe = apiKey
+  ? new Stripe(apiKey, {
+      apiVersion: '2025-02-24.acacia',
+    })
+  : null;
 
 /**
  * Fetch all active products from Stripe
  */
 export async function getStripeProducts() {
+  if (!stripe) {
+    throw new Error('Stripe is not configured. Please set STRIPE_API_KEY environment variable.');
+  }
+
   try {
     const prices = await stripe.prices.list({
       active: true,
@@ -56,6 +68,10 @@ export async function getStripeProducts() {
  * Get a specific product by ID
  */
 export async function getStripeProduct(productId: string) {
+  if (!stripe) {
+    throw new Error('Stripe is not configured. Please set STRIPE_API_KEY environment variable.');
+  }
+
   try {
     const product = await stripe.products.retrieve(productId);
     const prices = await stripe.prices.list({
@@ -98,6 +114,10 @@ export async function createCheckoutSession(
   successUrl?: string,
   cancelUrl?: string
 ) {
+  if (!stripe) {
+    throw new Error('Stripe is not configured. Please set STRIPE_API_KEY environment variable.');
+  }
+
   try {
     const session = await stripe.checkout.sessions.create({
       mode: 'subscription',

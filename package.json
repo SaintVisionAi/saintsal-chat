@@ -10,7 +10,11 @@
     "lint": "next lint",
     "backend": "node backend/superman-complete.mjs",
     "backend:dev": "node --watch backend/superman-complete.mjs",
-    "setup-vector-index": "node scripts/setup-mongodb-vector-index.mjs"
+    "setup-vector-index": "node scripts/setup-mongodb-vector-index.mjs",
+    "db:check": "tsx scripts/check-mongodb-connection.ts",
+    "db:init": "tsx scripts/init-mongodb.ts",
+    "db:verify": "tsx scripts/verify-mongodb-setup.ts",
+    "db:setup": "npm run db:check && npm run db:init && npm run db:verify"
   },
   "keywords": [
     "ai",
@@ -54,7 +58,7 @@
     "postcss": "^8.4.31",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "stripe": "^17.4.0",
+    "stripe": "^19.1.0",
     "tailwind-merge": "^2.0.0",
     "tailwindcss": "^3.3.5",
     "typescript": "^5.2.2"
@@ -62,7 +66,8 @@
   "devDependencies": {
     "@types/pg": "^8.15.6",
     "eslint": "^8.53.0",
-    "eslint-config-next": "^14.2.33"
+    "eslint-config-next": "^14.2.33",
+    "tsx": "^4.20.6"
   },
   "engines": {
     "node": ">=18.0.0"

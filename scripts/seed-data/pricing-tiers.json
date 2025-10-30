@@ -1,0 +1,76 @@
+[
+  {
+    "name": "free",
+    "displayName": "Free",
+    "price": 0,
+    "limits": {
+      "messagesPerMonth": 50,
+      "voiceMinutesPerMonth": 10,
+      "ragQueriesPerMonth": 20,
+      "maxFileSize": 5
+    },
+    "features": [
+      "Basic chat with GPT-4o mini",
+      "50 messages per month",
+      "10 voice minutes per month",
+      "Basic RAG support",
+      "Community support"
+    ]
+  },
+  {
+    "name": "pro",
+    "displayName": "Pro",
+    "price": 29,
+    "limits": {
+      "messagesPerMonth": 1000,
+      "voiceMinutesPerMonth": 200,
+      "ragQueriesPerMonth": 500,
+      "maxFileSize": 50
+    },
+    "teamLimits": {
+      "messagesPerMonth": 5000,
+      "voiceMinutesPerMonth": 1000,
+      "ragQueriesPerMonth": 2500,
+      "maxFileSize": 100,
+      "maxMembers": 10
+    },
+    "features": [
+      "Unlimited chat with all models",
+      "1,000 messages per month (individual)",
+      "200 voice minutes per month (individual)",
+      "Advanced RAG with vector search",
+      "Walkie Talkie mode",
+      "Model playground",
+      "Team collaboration (up to 10 members)",
+      "Priority support"
+    ]
+  },
+  {
+    "name": "enterprise",
+    "displayName": "Enterprise",
+    "price": 199,
+    "limits": {
+      "messagesPerMonth": -1,
+      "voiceMinutesPerMonth": -1,
+      "ragQueriesPerMonth": -1,
+      "maxFileSize": 500
+    },
+    "teamLimits": {
+      "messagesPerMonth": -1,
+      "voiceMinutesPerMonth": -1,
+      "ragQueriesPerMonth": -1,
+      "maxFileSize": 1000,
+      "maxMembers": -1
+    },
+    "features": [
+      "Everything in Pro",
+      "Unlimited usage",
+      "Unlimited team members",
+      "Custom integrations",
+      "Dedicated support",
+      "GoHighLevel CRM integration",
+      "White-label options",
+      "Custom AI training"
+    ]
+  }
+]
