@@ -14,7 +14,9 @@ import {
   Image as ImageIcon,
   Sparkles,
   Eye,
-  Camera
+  Camera,
+  MonitorPlay,
+  MonitorStop
 } from 'lucide-react';
 
 interface Message {
@@ -38,11 +40,15 @@ export default function SupermanSal() {
   const [iframeError, setIframeError] = useState(false);
   const [splitRatio, setSplitRatio] = useState(50); // 50% split by default
   const [isFullScreen, setIsFullScreen] = useState(false);
+  const [isScreenSharing, setIsScreenSharing] = useState(false);
+  const [screenStream, setScreenStream] = useState<MediaStream | null>(null);
 
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const screenshotInputRef = useRef<HTMLInputElement>(null);
+  const screenVideoRef = useRef<HTMLVideoElement>(null);
+  const screenCaptureIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -287,6 +293,133 @@ export default function SupermanSal() {
     setInputMessage(`Analyze the page I'm viewing: ${currentUrl}\n\nWhat can you tell me about this website? What is it for?`);
   };
 
+  const captureAndAnalyzeScreen = async () => {
+    if (!screenVideoRef.current || !isScreenSharing) return;
+
+    try {
+      // Create canvas to capture frame
+      const canvas = document.createElement('canvas');
+      const video = screenVideoRef.current;
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      const ctx = canvas.getContext('2d');
+
+      if (!ctx) return;
+
+      // Draw current frame
+      ctx.drawImage(video, 0, 0);
+
+      // Convert to base64
+      const base64Image = canvas.toDataURL('image/jpeg', 0.8);
+
+      console.log('[SCREEN-SHARE] Capturing frame for analysis...');
+
+      // Send to vision API
+      const response = await fetch('/api/superman/vision', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          imageBase64: base64Image,
+          prompt: 'Briefly describe what you see on this screen. Focus on the main content, any text, UI elements, and what the user appears to be working on. Keep it concise (2-3 sentences).'
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        setMessages(prev => [...prev, {
+          role: 'assistant',
+          content: `👁️ **Watching:** ${data.analysis}`,
+          timestamp: new Date()
+        }]);
+      }
+    } catch (err) {
+      console.error('[SCREEN-SHARE] Capture error:', err);
+    }
+  };
+
+  const startScreenSharing = async () => {
+    try {
+      // Request screen sharing
+      const stream = await navigator.mediaDevices.getDisplayMedia({
+        video: { mediaSource: 'screen' as any },
+        audio: false
+      });
+
+      setScreenStream(stream);
+      setIsScreenSharing(true);
+
+      // Attach to hidden video element
+      if (screenVideoRef.current) {
+        screenVideoRef.current.srcObject = stream;
+        screenVideoRef.current.play();
+      }
+
+      setMessages(prev => [...prev, {
+        role: 'system',
+        content: '🖥️ **LIVE SCREEN SHARING ACTIVATED!** Superman Sal is now watching your screen in real-time. He\'ll comment on what you\'re working on every few seconds. LFG!',
+        timestamp: new Date()
+      }]);
+
+      // Capture and analyze every 8 seconds
+      const interval = setInterval(captureAndAnalyzeScreen, 8000);
+      screenCaptureIntervalRef.current = interval;
+
+      // Initial capture after 2 seconds
+      setTimeout(captureAndAnalyzeScreen, 2000);
+
+      // Handle stream end
+      stream.getVideoTracks()[0].addEventListener('ended', () => {
+        stopScreenSharing();
+      });
+
+    } catch (err) {
+      console.error('[SCREEN-SHARE] Error:', err);
+      alert('Screen sharing failed. Make sure you grant permission to share your screen.');
+      setIsScreenSharing(false);
+    }
+  };
+
+  const stopScreenSharing = () => {
+    if (screenStream) {
+      screenStream.getTracks().forEach(track => track.stop());
+      setScreenStream(null);
+    }
+
+    if (screenCaptureIntervalRef.current) {
+      clearInterval(screenCaptureIntervalRef.current);
+      screenCaptureIntervalRef.current = null;
+    }
+
+    setIsScreenSharing(false);
+
+    setMessages(prev => [...prev, {
+      role: 'system',
+      content: '⏹️ Screen sharing stopped. Superman Sal is no longer watching.',
+      timestamp: new Date()
+    }]);
+  };
+
+  const toggleScreenSharing = () => {
+    if (isScreenSharing) {
+      stopScreenSharing();
+    } else {
+      startScreenSharing();
+    }
+  };
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (screenStream) {
+        screenStream.getTracks().forEach(track => track.stop());
+      }
+      if (screenCaptureIntervalRef.current) {
+        clearInterval(screenCaptureIntervalRef.current);
+      }
+    };
+  }, [screenStream]);
+
   return (
     <div className="superman-sal-container">
       {/* EPIC HEADER WITH BETA BADGE */}
@@ -309,6 +442,15 @@ export default function SupermanSal() {
         </div>
 
         <div className="superman-actions">
+          <button
+            onClick={toggleScreenSharing}
+            className={`superman-action-btn ${isScreenSharing ? 'superman-sharing-active' : 'superman-share-btn'}`}
+            title={isScreenSharing ? "Stop Screen Sharing" : "Share Your Screen LIVE"}
+          >
+            {isScreenSharing ? <MonitorStop size={18} /> : <MonitorPlay size={18} />}
+            <span>{isScreenSharing ? 'Stop Sharing' : 'SHARE SCREEN'}</span>
+            {isScreenSharing && <span className="live-indicator">● LIVE</span>}
+          </button>
           <button
             onClick={handleWebSearch}
             className="superman-action-btn"
@@ -342,6 +484,14 @@ export default function SupermanSal() {
           accept="image/*"
           onChange={handleScreenshotSelected}
           style={{ display: 'none' }}
+        />
+
+        {/* Hidden video element for screen capture */}
+        <video
+          ref={screenVideoRef}
+          style={{ display: 'none' }}
+          playsInline
+          muted
         />
       </div>
 

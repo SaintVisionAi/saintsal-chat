@@ -4688,3 +4688,68 @@ body {
   border-color: #BB86FC;
   color: #BB86FC;
 }
+
+/* SCREEN SHARING BUTTON - EPIC STYLING */
+.superman-share-btn {
+  background: linear-gradient(135deg, rgba(255, 213, 74, 0.2), rgba(255, 213, 74, 0.1)) !important;
+  border-color: var(--gold) !important;
+  color: var(--gold) !important;
+  font-weight: 700 !important;
+  position: relative;
+  overflow: hidden;
+}
+
+.superman-share-btn::before {
+  content: '🖥️';
+  position: absolute;
+  top: -10px;
+  right: -10px;
+  font-size: 32px;
+  opacity: 0.15;
+}
+
+.superman-share-btn:hover {
+  background: linear-gradient(135deg, rgba(255, 213, 74, 0.3), rgba(255, 213, 74, 0.15)) !important;
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(255, 213, 74, 0.4);
+}
+
+/* ACTIVE SCREEN SHARING */
+.superman-sharing-active {
+  background: linear-gradient(135deg, #ff4444, #cc0000) !important;
+  border-color: #ff6666 !important;
+  color: white !important;
+  font-weight: 700 !important;
+  animation: sharePulse 2s ease-in-out infinite;
+}
+
+@keyframes sharePulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(255, 68, 68, 0.7);
+  }
+  50% {
+    box-shadow: 0 0 0 10px rgba(255, 68, 68, 0);
+  }
+}
+
+.superman-sharing-active:hover {
+  background: linear-gradient(135deg, #ff5555, #dd1111) !important;
+}
+
+.live-indicator {
+  display: inline-block;
+  margin-left: 8px;
+  font-size: 12px;
+  font-weight: 900;
+  color: #fff;
+  animation: liveBlink 1.5s ease-in-out infinite;
+}
+
+@keyframes liveBlink {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.4;
+  }
+}
