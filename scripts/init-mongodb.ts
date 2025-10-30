@@ -18,7 +18,7 @@ if (!process.env.MONGODB_URI) {
 }
 
 console.log('✓ Environment loaded');
-console.log(`✓ MongoDB URI: ${process.env.MONGODB_URI.substring(0, 30)}...`);
+console.log('✓ MongoDB URI detected (value hidden for safety)');
 console.log(`✓ Database: ${process.env.MONGODB_DB || 'saintsal_db'}\n`);
 
 // Now import after env is set
