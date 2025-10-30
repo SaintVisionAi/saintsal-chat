@@ -22,7 +22,7 @@ interface Chat {
   timestamp: Date;
 }
 
-type ViewType = 'chat' | 'playground' | 'walkie' | 'compare' | 'superman';
+type ViewType = 'chat' | 'playground' | 'walkie' | 'superman';
 
 interface SidebarProps {
   onNewChat: () => void;
@@ -68,12 +68,9 @@ export default function Sidebar({
       special: true // Mark as special/featured
     },
     {
-      name: 'Code Agent',
-      icon: Code2,
-      action: () => {
-        onViewChange('chat');
-        // Trigger will be handled by parent component
-      }
+      name: 'Chat',
+      icon: MessageSquare,
+      action: () => onViewChange('chat')
     },
     {
       name: 'Voice Assistant',
@@ -81,14 +78,9 @@ export default function Sidebar({
       action: () => onViewChange('walkie')
     },
     {
-      name: 'Model Playground',
-      icon: FileText,
+      name: 'Playground',
+      icon: Code2,
       action: () => onViewChange('playground')
-    },
-    {
-      name: 'Compare Models',
-      icon: Wrench,
-      action: () => onViewChange('compare')
     },
   ];
 
@@ -138,6 +130,13 @@ export default function Sidebar({
       {/* View Navigation */}
       <div className="sidebar-views">
         <button
+          className={`view-btn ${currentView === 'superman' ? 'active' : ''}`}
+          onClick={() => onViewChange('superman')}
+        >
+          <Zap size={16} />
+          <span>SUPERMAN SAL</span>
+        </button>
+        <button
           className={`view-btn ${currentView === 'chat' ? 'active' : ''}`}
           onClick={() => onViewChange('chat')}
         >
@@ -157,13 +156,6 @@ export default function Sidebar({
         >
           <Mic size={16} />
           <span>Walkie Talkie</span>
-        </button>
-        <button
-          className={`view-btn ${currentView === 'compare' ? 'active' : ''}`}
-          onClick={() => onViewChange('compare')}
-        >
-          <Box size={16} />
-          <span>Compare Models</span>
         </button>
       </div>
 
