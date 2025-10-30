@@ -181,12 +181,53 @@ export default function SupermanSal() {
     }
   };
 
-  const handleWebSearch = () => {
+  const handleWebSearch = async () => {
     const searchQuery = prompt('What do you want me to search for?');
-    if (searchQuery) {
-      const searchUrl = `https://www.google.com/search?q=${encodeURIComponent(searchQuery)}`;
-      setUrl(searchUrl);
-      setCurrentUrl(searchUrl);
+    if (!searchQuery) return;
+
+    setIsLoading(true);
+    setMessages(prev => [...prev, {
+      role: 'user',
+      content: `🔍 Search the web for: "${searchQuery}"`,
+      timestamp: new Date()
+    }]);
+
+    try {
+      const response = await fetch('/api/superman/search', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query: searchQuery }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        // Display search results in chat
+        setMessages(prev => [...prev, {
+          role: 'assistant',
+          content: `🌐 **Web Search Results:**\n\n${data.results}\n\n💡 You can also view full results: ${data.searchUrl}`,
+          timestamp: new Date()
+        }]);
+
+        // Optionally load Google search in iframe
+        const loadInViewer = confirm('Load full search results in viewer?');
+        if (loadInViewer) {
+          const searchUrl = `https://www.google.com/search?q=${encodeURIComponent(searchQuery)}`;
+          setUrl(searchUrl);
+          setCurrentUrl(searchUrl);
+        }
+      } else {
+        throw new Error(data.error || 'Search failed');
+      }
+    } catch (err) {
+      console.error('Web search error:', err);
+      setMessages(prev => [...prev, {
+        role: 'assistant',
+        content: `❌ Search failed: ${err instanceof Error ? err.message : String(err)}\n\nYou can still search manually: https://www.google.com/search?q=${encodeURIComponent(searchQuery)}`,
+        timestamp: new Date()
+      }]);
+    } finally {
+      setIsLoading(false);
     }
   };
 
