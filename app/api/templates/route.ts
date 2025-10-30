@@ -92,31 +92,42 @@ const SYSTEM_TEMPLATES = [
 // GET all templates (system + user custom)
 export async function GET(req: Request) {
   try {
+    // 🔐 CHECK USER AUTHENTICATION
+    const cookies = req.headers.get('cookie') || '';
+    const authCookieMatch = cookies.match(/saintsal_auth=([^;]+)/) || cookies.match(/saintsal_session=([^;]+)/);
+    const userId = authCookieMatch ? authCookieMatch[1] : null;
+
+    if (!userId) {
+      console.log('❌ [TEMPLATES] No auth cookie - user not authenticated');
+      return NextResponse.json(
+        { error: "Authentication required" },
+        { status: 401 }
+      );
+    }
+    console.log(`🔐 [TEMPLATES] User authenticated: ${userId}`);
+
     const { searchParams } = new URL(req.url);
-    const userId = searchParams.get("userId");
 
     // Always return system templates
     let allTemplates = [...SYSTEM_TEMPLATES];
 
-    // If userId provided, fetch custom templates
-    if (userId) {
-      const db = await getDb();
-      const templates = db.collection("prompt_templates");
-      const customTemplates = await templates.find({ userId }).toArray();
+    // Fetch custom templates for authenticated user
+    const db = await getDb();
+    const templates = db.collection("prompt_templates");
+    const customTemplates = await templates.find({ userId }).toArray();
 
-      allTemplates = [
-        ...SYSTEM_TEMPLATES,
-        ...customTemplates.map((t) => ({
-          id: t._id.toString(),
-          name: t.name,
-          category: t.category,
-          icon: t.icon,
-          prompt: t.prompt,
-          isSystem: false,
-          createdAt: t.createdAt,
-        })),
-      ];
-    }
+    allTemplates = [
+      ...SYSTEM_TEMPLATES,
+      ...customTemplates.map((t) => ({
+        id: t._id.toString(),
+        name: t.name,
+        category: t.category,
+        icon: t.icon,
+        prompt: t.prompt,
+        isSystem: false,
+        createdAt: t.createdAt,
+      })),
+    ];
 
     return NextResponse.json({
       success: true,
@@ -133,10 +144,24 @@ export async function GET(req: Request) {
 // POST create custom template
 export async function POST(req: Request) {
   try {
-    const { userId, name, category, icon, prompt } = await req.json();
+    // 🔐 CHECK USER AUTHENTICATION
+    const cookies = req.headers.get('cookie') || '';
+    const authCookieMatch = cookies.match(/saintsal_auth=([^;]+)/) || cookies.match(/saintsal_session=([^;]+)/);
+    const userId = authCookieMatch ? authCookieMatch[1] : null;
 
-    if (!userId || !name || !prompt) {
-      return NextResponse.json({ error: "userId, name, and prompt are required" }, { status: 400 });
+    if (!userId) {
+      console.log('❌ [TEMPLATES-CREATE] No auth cookie - user not authenticated');
+      return NextResponse.json(
+        { error: "Authentication required" },
+        { status: 401 }
+      );
+    }
+    console.log(`🔐 [TEMPLATES-CREATE] User authenticated: ${userId}`);
+
+    const { name, category, icon, prompt } = await req.json();
+
+    if (!name || !prompt) {
+      return NextResponse.json({ error: "name and prompt are required" }, { status: 400 });
     }
 
     const db = await getDb();
@@ -166,12 +191,25 @@ export async function POST(req: Request) {
 // DELETE custom template
 export async function DELETE(req: Request) {
   try {
+    // 🔐 CHECK USER AUTHENTICATION
+    const cookies = req.headers.get('cookie') || '';
+    const authCookieMatch = cookies.match(/saintsal_auth=([^;]+)/) || cookies.match(/saintsal_session=([^;]+)/);
+    const userId = authCookieMatch ? authCookieMatch[1] : null;
+
+    if (!userId) {
+      console.log('❌ [TEMPLATES-DELETE] No auth cookie - user not authenticated');
+      return NextResponse.json(
+        { error: "Authentication required" },
+        { status: 401 }
+      );
+    }
+    console.log(`🔐 [TEMPLATES-DELETE] User authenticated: ${userId}`);
+
     const { searchParams } = new URL(req.url);
     const templateId = searchParams.get("templateId");
-    const userId = searchParams.get("userId");
 
-    if (!templateId || !userId) {
-      return NextResponse.json({ error: "templateId and userId are required" }, { status: 400 });
+    if (!templateId) {
+      return NextResponse.json({ error: "templateId is required" }, { status: 400 });
     }
 
     const db = await getDb();
