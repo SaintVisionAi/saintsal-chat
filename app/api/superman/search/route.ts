@@ -4,6 +4,11 @@
  */
 import { NextResponse } from "next/server";
 
+interface RelatedTopic {
+  text?: string;
+  firstURL?: string;
+}
+
 export async function POST(req: Request) {
   try {
     console.log('🔍 [SUPERMAN-SEARCH] Search request received');
@@ -76,7 +81,7 @@ export async function POST(req: Request) {
 
     if (results.relatedTopics.length > 0) {
       formattedResults += `\n**Related Topics:**\n`;
-      results.relatedTopics.forEach((topic, index) => {
+      results.relatedTopics.forEach((topic: RelatedTopic, index: number) => {
         if (topic.text) {
           formattedResults += `${index + 1}. ${topic.text}\n`;
           if (topic.firstURL) {
