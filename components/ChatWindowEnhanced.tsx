@@ -11,7 +11,9 @@ import {
   Globe,
   Sparkles,
   Calculator,
-  Database
+  Database,
+  Github,
+  Mail
 } from 'lucide-react';
 
 interface Message {
@@ -544,58 +546,6 @@ export default function ChatWindowEnhanced({ chatId }: ChatWindowProps) {
 
       {/* Input Area */}
       <div className="chat-input-container">
-        {/* Tools Bar */}
-        <div className="chat-tools-bar">
-          <button
-            className="tool-btn"
-            onClick={() => setInput('/code ')}
-            title="Code Generation"
-          >
-            <Code2 size={16} />
-            <span>Code</span>
-          </button>
-          <button
-            className="tool-btn"
-            onClick={() => setInput('Generate an image of ')}
-            title="Image Generation"
-          >
-            <ImageIcon size={16} />
-            <span>Image</span>
-          </button>
-          <button
-            className="tool-btn"
-            onClick={() => setInput('Search the web for ')}
-            title="Web Search"
-          >
-            <Globe size={16} />
-            <span>Search</span>
-          </button>
-          <button
-            className="tool-btn"
-            onClick={() => setInput('Analyze data: ')}
-            title="Data Analysis"
-          >
-            <Database size={16} />
-            <span>Data</span>
-          </button>
-          <button
-            className="tool-btn"
-            onClick={() => setInput('Calculate: ')}
-            title="Calculator"
-          >
-            <Calculator size={16} />
-            <span>Calculate</span>
-          </button>
-          <button
-            className="tool-btn"
-            onClick={() => setInput('Create ')}
-            title="AI Assistant"
-          >
-            <Sparkles size={16} />
-            <span>Create</span>
-          </button>
-        </div>
-
         <div className="chat-input-wrapper">
           <input
             ref={fileInputRef}
@@ -619,7 +569,7 @@ export default function ChatWindowEnhanced({ chatId }: ChatWindowProps) {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Message SaintSal... (try '/code' for code generation)"
+            placeholder="Message SaintSal..."
             rows={1}
             disabled={isStreaming}
           />
@@ -637,7 +587,7 @@ export default function ChatWindowEnhanced({ chatId }: ChatWindowProps) {
             <button
               className="send-btn stop-btn"
               onClick={stopStreaming}
-              title="Stop generating"
+              title="Stop generation"
             >
               <StopCircle size={20} />
             </button>
@@ -645,11 +595,40 @@ export default function ChatWindowEnhanced({ chatId }: ChatWindowProps) {
             <button
               className="send-btn"
               onClick={sendMessage}
-              disabled={!input.trim()}
+              disabled={!input.trim() || loading}
+              title="Send message"
             >
               <Send size={20} />
             </button>
           )}
+        </div>
+
+        {/* Integration Connectors - Below chat input like Claude */}
+        <div className="chat-connectors">
+          <button
+            className="connector-btn"
+            onClick={() => window.location.href = '/api/auth/oauth/github'}
+            title="Connect GitHub"
+          >
+            <Github size={14} />
+            <span>Connect GitHub</span>
+          </button>
+          <button
+            className="connector-btn"
+            onClick={() => window.location.href = '/api/integrations/google'}
+            title="Connect Google"
+          >
+            <Globe size={14} />
+            <span>Connect Google</span>
+          </button>
+          <button
+            className="connector-btn"
+            onClick={() => window.location.href = '/api/integrations/microsoft'}
+            title="Connect Microsoft"
+          >
+            <Mail size={14} />
+            <span>Connect Microsoft</span>
+          </button>
         </div>
         <div className="input-footer">
           SaintSal can make mistakes. Please verify important information.
