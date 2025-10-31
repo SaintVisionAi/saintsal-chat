@@ -33,7 +33,8 @@ export default function LoginPage() {
 
       if (data.success) {
         // Returning user → go straight to chat
-        router.push('/');
+        // Use window.location to force full page reload with new cookies
+        window.location.href = '/';
       } else {
         setError(data.error || 'Invalid credentials');
       }

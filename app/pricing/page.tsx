@@ -20,60 +20,7 @@ declare global {
 
 export default function PricingPage() {
   const router = useRouter()
-  const [billing, setBilling] = useState<'monthly' | 'yearly'>('monthly')
   const [stripeLoaded, setStripeLoaded] = useState(false)
-
-  const plans = [
-    {
-      name: 'Starter',
-      price: billing === 'monthly' ? 0 : 0,
-      description: 'Perfect for individuals and small teams',
-      features: [
-        '10 AI conversations/day',
-        'Basic HACP™ protocol',
-        'Email support',
-        'Community access',
-        'Standard analytics'
-      ],
-      cta: 'Start Free',
-      popular: false,
-      color: 'blue'
-    },
-    {
-      name: 'Professional',
-      price: billing === 'monthly' ? 97 : 970,
-      description: 'For growing businesses and teams',
-      features: [
-        'Unlimited AI conversations',
-        'Full HACP™ protocol access',
-        'Priority support',
-        'CRM integration',
-        'Advanced analytics',
-        'Custom workflows',
-        'API access'
-      ],
-      cta: 'Go Pro',
-      popular: true,
-      color: 'yellow'
-    },
-    {
-      name: 'Enterprise',
-      price: billing === 'monthly' ? 297 : 2970,
-      description: 'Scale without limits',
-      features: [
-        'Everything in Professional',
-        'Unlimited team members',
-        'Dedicated account manager',
-        'Custom AI training',
-        'Advanced integrations',
-        'SLA guarantee',
-        'White-label options'
-      ],
-      cta: 'Contact Sales',
-      popular: false,
-      color: 'green'
-    }
-  ]
 
   return (
     <>
@@ -91,133 +38,44 @@ export default function PricingPage() {
           <div className="max-w-6xl mx-auto">
             <div className="text-center mb-16">
               <h1 className="heading-hero">
-                <span className="block text-white">Simple, Transparent</span>
-                <span className="block text-gradient-yellow">Pricing</span>
+                <span className="block text-white">Choose Your</span>
+                <span className="block text-gradient-yellow">Plan</span>
               </h1>
               <p className="text-xl text-gray-400 max-w-2xl mx-auto mb-8">
-                Choose the plan that fits your business needs. All plans include our patented HACP™ technology.
+                Simple, transparent pricing powered by Stripe. Start free, upgrade anytime.
               </p>
-
-              {/* Billing Toggle */}
-              <div className="flex items-center justify-center space-x-4 mb-12">
-                <span className={`text-sm ${billing === 'monthly' ? 'text-white' : 'text-gray-500'}`}>Monthly</span>
-                <button
-                  onClick={() => setBilling(billing === 'monthly' ? 'yearly' : 'monthly')}
-                  className="relative inline-flex h-6 w-11 items-center rounded-full bg-gray-600 transition-colors focus:outline-none focus:ring-2 focus:ring-saint-yellow-500 focus:ring-offset-2"
-                >
-                  <span
-                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                      billing === 'yearly' ? 'translate-x-6' : 'translate-x-1'
-                    }`}
-                  />
-                </button>
-                <span className={`text-sm ${billing === 'yearly' ? 'text-white' : 'text-gray-500'}`}>
-                  Yearly <span className="text-saint-yellow-500 font-semibold">(Save 20%)</span>
-                </span>
-              </div>
             </div>
 
-            {/* Pricing Cards */}
-            <div className="grid md:grid-cols-3 gap-8 mb-16">
-              {plans.map((plan, index) => (
-                <div
-                  key={plan.name}
-                  className={`enterprise-card relative ${
-                    plan.popular ? 'ring-2 ring-saint-yellow-500 bg-saint-yellow-500/5' : ''
-                  }`}
-                >
-                  {plan.popular && (
-                    <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                      <span className="bg-saint-yellow-500 text-black px-3 py-1 rounded-full text-xs font-bold">
-                        MOST POPULAR
-                      </span>
-                    </div>
-                  )}
-
-                  <div className="text-center">
-                    <h3 className="text-xl font-semibold text-white mb-2">{plan.name}</h3>
-                    <p className="text-gray-400 text-sm mb-6">{plan.description}</p>
-
-                    <div className="mb-6">
-                      <span className="text-4xl font-bold text-white">
-                        ${plan.price}
-                      </span>
-                      <span className="text-gray-400">
-                        /{billing === 'monthly' ? 'month' : 'year'}
-                      </span>
-                    </div>
-
-                    <ul className="space-y-3 mb-8 text-left">
-                      {plan.features.map((feature, idx) => (
-                        <li key={idx} className="flex items-start space-x-3 text-sm text-gray-300">
-                          <span className="text-green-500 mt-0.5">✓</span>
-                          <span>{feature}</span>
-                        </li>
-                      ))}
-                    </ul>
-
-                    <button
-                      onClick={() => plan.name === 'Enterprise' ? window.location.href = 'mailto:ryan@cookinknowledge.com?subject=Enterprise Plan Inquiry' : router.push('/auth/signup')}
-                      className={`w-full py-3 px-6 rounded-lg font-semibold transition ${
-                        plan.popular
-                          ? 'bg-saint-yellow-500 text-black hover:bg-saint-yellow-400'
-                          : 'bg-white/10 text-white border border-white/20 hover:bg-white/20'
-                      }`}
-                    >
-                      {plan.cta}
-                    </button>
-                  </div>
+            {/* Real Stripe Pricing Table */}
+            <div className="max-w-5xl mx-auto bg-white/5 rounded-2xl p-8 border border-white/10">
+              {stripeLoaded ? (
+                <stripe-pricing-table
+                  pricing-table-id="prctbl_1SIQItGVzsQbCDmmZ97ubwpM"
+                  publishable-key="pk_live_51SGbmHGVzsQbCDmmc3GGBQKTrxEWfXJBw2wCZqPNJITuNcZdBI8uQa04BkWxBloqDq2fJmKuF2Z5o4MFO0o7uAJU009bQ0K6pw"
+                />
+              ) : (
+                <div className="py-12 text-gray-400">
+                  <div className="animate-pulse">Loading pricing options...</div>
                 </div>
-              ))}
+              )}
             </div>
 
-            {/* Enterprise Features */}
-            <div className="text-center mb-16">
-              <h3 className="text-2xl font-semibold text-white mb-8">All Plans Include</h3>
+            {/* Trust Badges */}
+            <div className="text-center mt-16">
+              <h3 className="text-xl font-semibold text-white mb-8">Trusted & Secure</h3>
               <div className="grid md:grid-cols-3 gap-8 text-sm text-gray-400">
                 <div className="flex items-center justify-center space-x-2">
                   <span className="text-green-500">✓</span>
-                  <span>99.9% uptime SLA</span>
+                  <span>Secure Stripe payments</span>
                 </div>
                 <div className="flex items-center justify-center space-x-2">
                   <span className="text-green-500">✓</span>
-                  <span>SOC 2 certified security</span>
-                </div>
-                <div className="flex items-center justify-center space-x-2">
-                  <span className="text-green-500">✓</span>
-                  <span>GDPR & CCPA compliant</span>
-                </div>
-                <div className="flex items-center justify-center space-x-2">
-                  <span className="text-green-500">✓</span>
-                  <span>End-to-end encryption</span>
-                </div>
-                <div className="flex items-center justify-center space-x-2">
-                  <span className="text-green-500">✓</span>
-                  <span>24/7 monitoring</span>
+                  <span>Cancel anytime</span>
                 </div>
                 <div className="flex items-center justify-center space-x-2">
                   <span className="text-green-500">✓</span>
                   <span>30-day money back</span>
                 </div>
-              </div>
-            </div>
-
-            {/* Stripe Pricing Table */}
-            <div className="text-center mb-16">
-              <h3 className="text-2xl font-semibold text-white mb-8">
-                Or Choose Your Plan with <span className="text-gradient-yellow">Stripe</span>
-              </h3>
-              <div className="max-w-5xl mx-auto bg-white/5 rounded-2xl p-8 border border-white/10">
-                {stripeLoaded ? (
-                  <stripe-pricing-table
-                    pricing-table-id="prctbl_1SIQItGVzsQbCDmmZ97ubwpM"
-                    publishable-key="pk_live_51SGbmHGVzsQbCDmmc3GGBQKTrxEWfXJBw2wCZqPNJITuNcZdBI8uQa04BkWxBloqDq2fJmKuF2Z5o4MFO0o7uAJU009bQ0K6pw"
-                  />
-                ) : (
-                  <div className="py-12 text-gray-400">
-                    <div className="animate-pulse">Loading pricing options...</div>
-                  </div>
-                )}
               </div>
             </div>
           </div>
