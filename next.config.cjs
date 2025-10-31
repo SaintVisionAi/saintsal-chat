@@ -52,7 +52,7 @@ const nextConfig = {
       },
       {
         source: '/dashboard',
-        destination: '/warroom',
+        destination: '/',
         permanent: true,
       },
     ]

@@ -8,20 +8,17 @@ interface PlaygroundMessage {
 }
 
 export default function Playground() {
-  const [model, setModel] = useState('gpt-5-core');
+  const [model, setModel] = useState('saintsal');
   const [temperature, setTemperature] = useState(0.7);
   const [maxTokens, setMaxTokens] = useState(1000);
-  const [systemPrompt, setSystemPrompt] = useState('You are SaintSal, a helpful AI assistant.');
+  const [systemPrompt, setSystemPrompt] = useState('You are SaintSal™, an advanced AI assistant powered by cutting-edge technology. You are helpful, insightful, and empowering.');
   const [userInput, setUserInput] = useState('');
   const [messages, setMessages] = useState<PlaygroundMessage[]>([]);
   const [loading, setLoading] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
 
   const models = [
-    { id: 'gpt-5-core', name: 'GPT-5 Core', icon: Brain, color: 'text-blue-400' },
-    { id: 'gpt-5-fast', name: 'GPT-5 Fast', icon: Zap, color: 'text-green-400' },
-    { id: 'claude-sonnet-4', name: 'Claude Sonnet 4', icon: Sparkles, color: 'text-purple-400' },
-    { id: 'grok-3', name: 'Grok-3', icon: Code2, color: 'text-orange-400' },
+    { id: 'saintsal', name: 'SaintSal™ AI', icon: Brain, color: 'text-yellow-400' },
   ];
 
   const handleSubmit = async (e: React.FormEvent) => {

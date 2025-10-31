@@ -219,7 +219,7 @@ export default function PrivacyPage() {
                     This policy is effective as of January 2024 and governs the SaintVision AI enterprise platform.
                   </p>
                   <button
-                    onClick={() => router.push('/contact')}
+                    onClick={() => window.location.href = 'mailto:ryan@cookinknowledge.com?subject=Privacy Policy Question'}
                     className="btn-outline"
                   >
                     Privacy Questions?

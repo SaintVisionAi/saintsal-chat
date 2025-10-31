@@ -5,6 +5,8 @@
 import { NextResponse } from "next/server";
 import { getDb } from "../../../../lib/mongodb";
 import bcrypt from "bcryptjs";
+import crypto from "crypto";
+import { sendVerificationEmail } from "../../../../lib/email";
 
 export async function POST(req: Request) {
   console.log('🔐 [SIGNUP] Starting signup request...');
@@ -52,6 +54,12 @@ export async function POST(req: Request) {
     const hashedPassword = await bcrypt.hash(password, 10);
     console.log('✅ [SIGNUP] Password hashed');
 
+    // Generate email verification token
+    console.log('🔑 [SIGNUP] Generating email verification token...');
+    const verificationToken = crypto.randomBytes(32).toString('hex');
+    const verificationTokenExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+    console.log('✅ [SIGNUP] Verification token generated');
+
     // Create user with limits and usage tracking
     console.log('👤 [SIGNUP] Creating user with Free plan limits...');
     const result = await users.insertOne({
@@ -61,6 +69,9 @@ export async function POST(req: Request) {
       companyName: companyName || "",
       role: role || "",
       plan: "free", // Default to free plan
+      emailVerified: false, // Email not verified yet
+      verificationToken: verificationToken,
+      verificationTokenExpiry: verificationTokenExpiry,
       limits: {
         messagesPerMonth: 50,
         voiceMinutesPerMonth: 10,
@@ -79,6 +90,21 @@ export async function POST(req: Request) {
 
     console.log(`✅ [SIGNUP] User created successfully! ID: ${result.insertedId}`);
     console.log(`📦 [SIGNUP] Plan: FREE | Messages: 50/month | Voice: 10min/month | RAG: 20/month`);
+
+    // Send verification email
+    console.log('📧 [SIGNUP] Sending verification email...');
+    const verificationUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'https://saintsal.ai'}/auth/verify?token=${verificationToken}`;
+    const emailSent = await sendVerificationEmail(
+      email.toLowerCase(),
+      name || email.split("@")[0],
+      verificationUrl
+    );
+
+    if (emailSent) {
+      console.log('✅ [SIGNUP] Verification email sent successfully');
+    } else {
+      console.log('⚠️ [SIGNUP] Failed to send verification email, but signup continues');
+    }
 
     // Create session (simple cookie-based)
     const response = NextResponse.json(
