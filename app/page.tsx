@@ -5,7 +5,7 @@ import Sidebar from '../components/Sidebar';
 import ChatWindowEnhanced from '../components/ChatWindowEnhanced';
 import Playground from '../components/Playground';
 import WalkieTalkie from '../components/WalkieTalkie';
-// import SupermanSal from '../components/SupermanSal';
+import SupermanSal from '../components/SupermanSal';
 
 type ViewType = 'chat' | 'playground' | 'walkie' | 'superman';
 
@@ -80,7 +80,7 @@ export default function Page() {
       {currentView === 'chat' && <ChatWindowEnhanced chatId={currentChatId} />}
       {currentView === 'playground' && <Playground />}
       {currentView === 'walkie' && <WalkieTalkie />}
-      {/* {currentView === 'superman' && <SupermanSal />} */}
+      {currentView === 'superman' && <SupermanSal />}
     </div>
   );
 }
