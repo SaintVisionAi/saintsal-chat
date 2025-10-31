@@ -5,6 +5,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { MongoClient, ObjectId } from "mongodb";
 import bcrypt from "bcryptjs";
+import crypto from "crypto";
+import { sendVerificationEmail } from "@/lib/email";
 
 const mongoUri = process.env.MONGODB_URI!;
 let cachedClient: MongoClient | null = null;
@@ -46,17 +48,20 @@ export async function GET(req: NextRequest) {
   }
 }
 
-// POST - Create new user
+// POST - Create new user (Admin must provide all fields + user must verify email)
 export async function POST(req: NextRequest) {
   try {
     if (!isAdmin(req)) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { name, email, password, plan, companyName, role } = await req.json();
+    const { name, email, password, phone, plan, companyName, role } = await req.json();
 
-    if (!name || !email || !password) {
-      return NextResponse.json({ error: "Name, email, and password are required" }, { status: 400 });
+    // Require all essential fields
+    if (!name || !email || !password || !phone) {
+      return NextResponse.json({
+        error: "Name, email, password, and phone number are required"
+      }, { status: 400 });
     }
 
     const client = await getMongoClient();
@@ -72,22 +77,45 @@ export async function POST(req: NextRequest) {
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Create user
+    // Generate verification token
+    const verificationToken = crypto.randomBytes(32).toString('hex');
+    const verificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+
+    // Create user (emailVerified = false)
     const result = await users.insertOne({
       name,
       email: email.toLowerCase(),
       password: hashedPassword,
+      phone,
       plan: plan || "free",
       companyName: companyName || "",
       role: role || "user",
+      emailVerified: false,
+      verificationToken,
+      verificationExpires,
       createdAt: new Date(),
       lastLogin: null,
+      usage: {
+        messages: 0,
+        lastReset: new Date()
+      }
     });
+
+    console.log(`✅ [ADMIN] Created user: ${email} (ID: ${result.insertedId})`);
+
+    // Send verification email
+    try {
+      await sendVerificationEmail(email.toLowerCase(), verificationToken);
+      console.log(`📧 [ADMIN] Verification email sent to: ${email}`);
+    } catch (emailError) {
+      console.error('❌ [ADMIN] Failed to send verification email:', emailError);
+      // Don't fail user creation if email fails - admin can resend
+    }
 
     return NextResponse.json({
       success: true,
       userId: result.insertedId.toString(),
-      message: "User created successfully",
+      message: "User created successfully. Verification email sent.",
     });
   } catch (error: any) {
     console.error("Create user error:", error);
