@@ -33,6 +33,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <head>
+        {/* Mobile Viewport - Critical for 81% mobile users */}
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+        
         {/* PWA Meta Tags */}
         <meta name="theme-color" content="#FFD54A" />
         <meta name="mobile-web-app-capable" content="yes" />
@@ -40,6 +43,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="apple-mobile-web-app-title" content="SaintSal™" />
         <link rel="manifest" href="/manifest.json" />
+        
+        {/* Prevent zoom on input focus (iOS) */}
+        <meta name="format-detection" content="telephone=no" />
 
         {/* Service Worker Registration */}
         <script

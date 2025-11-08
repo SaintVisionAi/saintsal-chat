@@ -489,6 +489,16 @@ export async function createTeam(
     const owner = await users.findOne({ _id: new ObjectId(ownerId) }) as any;
     if (!owner) throw new Error('Owner not found');
 
+    // Validate that user's plan allows team creation
+    if (owner.plan !== 'pro' && owner.plan !== 'enterprise') {
+      throw new Error('Teams are only available for Pro and Enterprise plans. Please upgrade your plan first.');
+    }
+
+    // Validate that requested plan matches user's plan (or is enterprise if user is enterprise)
+    if (plan === 'enterprise' && owner.plan !== 'enterprise') {
+      throw new Error('Enterprise teams require an Enterprise plan. Please upgrade first.');
+    }
+
     const tier = PRICING_TIERS.find((t) => t.name === plan);
     if (!tier || !tier.teamLimits) throw new Error('Invalid plan for teams');
 

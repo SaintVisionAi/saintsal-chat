@@ -105,7 +105,12 @@ export async function POST(req: NextRequest) {
 
     // Send verification email
     try {
-      await sendVerificationEmail(email.toLowerCase(), verificationToken);
+      const verificationUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'https://saintsal.ai'}/auth/verify?token=${verificationToken}`;
+      await sendVerificationEmail(
+        email.toLowerCase(),
+        name || email.split("@")[0],
+        verificationUrl
+      );
       console.log(`📧 [ADMIN] Verification email sent to: ${email}`);
     } catch (emailError) {
       console.error('❌ [ADMIN] Failed to send verification email:', emailError);

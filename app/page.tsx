@@ -20,17 +20,25 @@ export default function Page() {
     // Check authentication status
     const checkAuth = async () => {
       try {
-        const response = await fetch('/api/auth/check');
+        // Include credentials to send cookies
+        const response = await fetch('/api/auth/check', {
+          credentials: 'include',
+          cache: 'no-store',
+        });
         const data = await response.json();
+
+        console.log('🔐 [AUTH] Auth check result:', data);
 
         if (!data.authenticated) {
           // Not authenticated, redirect to splash
+          console.log('❌ [AUTH] Not authenticated, redirecting to splash');
           router.push('/splash');
         } else {
+          console.log('✅ [AUTH] Authenticated:', data.user);
           setIsAuthenticated(true);
         }
       } catch (error) {
-        console.error('Auth check failed:', error);
+        console.error('❌ [AUTH] Auth check failed:', error);
         router.push('/splash');
       } finally {
         setIsLoading(false);

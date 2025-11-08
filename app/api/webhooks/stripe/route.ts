@@ -12,7 +12,7 @@ import { getPlanLimits, PRICING_TIERS } from '../../../../lib/mongodb-schema';
 const stripeKey = process.env.STRIPE_SECRET_KEY || process.env.STRIPE_API_KEY;
 const stripe = stripeKey
   ? new Stripe(stripeKey, {
-      apiVersion: '2025-02-24.acacia',
+      apiVersion: '2025-10-29.clover',
     })
   : null;
 

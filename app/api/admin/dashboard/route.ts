@@ -4,6 +4,7 @@
  */
 import { NextRequest, NextResponse } from "next/server";
 import { MongoClient } from "mongodb";
+import { getSession } from "../../../../lib/session";
 
 const mongoUri = process.env.MONGODB_URI!;
 let cachedClient: MongoClient | null = null;
@@ -17,15 +18,20 @@ async function getMongoClient() {
 }
 
 // Verify admin session
-function isAdmin(req: NextRequest): boolean {
-  const session = req.cookies.get("saintsal_admin_session");
-  return session?.value === "admin-authenticated";
+async function isAdmin(req: NextRequest): Promise<boolean> {
+  try {
+    const res = NextResponse.json({});
+    const session = await getSession(req, res);
+    return session.isAdmin === true;
+  } catch {
+    return false;
+  }
 }
 
 export async function GET(req: NextRequest) {
   try {
     // Check admin authentication
-    if (!isAdmin(req)) {
+    if (!(await isAdmin(req))) {
       return NextResponse.json({ error: "Unauthorized - Admin access required" }, { status: 401 });
     }
 

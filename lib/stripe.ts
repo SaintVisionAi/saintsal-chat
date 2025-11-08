@@ -14,7 +14,7 @@ if (!apiKey && typeof window === 'undefined') {
 
 export const stripe = apiKey
   ? new Stripe(apiKey, {
-      apiVersion: '2025-02-24.acacia',
+      apiVersion: '2025-10-29.clover',
     })
   : null;
 
@@ -166,7 +166,8 @@ export function mapProductNameToTier(productName: string): string {
 export async function syncStripeProductsToMongo(mongoClient: any) {
   try {
     const products = await getStripeProducts();
-    const db = mongoClient.db('saintsal');
+    const dbName = process.env.MONGODB_DB || 'saintsal_db';
+    const db = mongoClient.db(dbName);
     const packagesCollection = db.collection('packages');
 
     // Clear existing packages

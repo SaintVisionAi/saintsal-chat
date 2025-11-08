@@ -325,6 +325,7 @@ export default function ChatWindowEnhanced({ chatId }: ChatWindowProps) {
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include', // Include session cookies for authentication
         body: JSON.stringify({
           message: userText,
           stream: true, // Enable streaming

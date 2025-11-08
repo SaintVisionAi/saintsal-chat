@@ -29,8 +29,8 @@ export async function POST(req: Request) {
 
     let response = "";
 
-    // Route to appropriate model
-    if (model === "gpt-5-core" || model === "gpt-5-fast") {
+    // Route to appropriate model (default to GPT if model is 'saintsal' or unknown)
+    if (model === "saintsal" || model === "gpt-5-core" || model === "gpt-5-fast" || !model) {
       const completion = await openai.chat.completions.create({
         model: process.env.OPENAI_MODEL || "gpt-4o-mini",
         messages: [

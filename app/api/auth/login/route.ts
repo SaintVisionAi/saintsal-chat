@@ -1,10 +1,11 @@
 /**
  * app/api/auth/login/route.ts
- * User login endpoint
+ * User login endpoint with secure session management
  */
 import { NextRequest, NextResponse } from 'next/server';
 import { MongoClient } from 'mongodb';
 import bcrypt from 'bcryptjs';
+import { getSession, createSessionResponse, SessionData } from '../../../../lib/session';
 
 const MONGODB_URI = process.env.MONGODB_URI!;
 
@@ -68,8 +69,18 @@ export async function POST(req: NextRequest) {
 
     await client.close();
 
-    // Create response with session cookie
-    const response = NextResponse.json({
+    // Create secure session
+    console.log('🍪 [LOGIN] Creating secure session...');
+    const sessionData: SessionData = {
+      userId: user._id.toString(),
+      email: user.email.toLowerCase(),
+      name: user.name,
+      plan: user.plan || 'free',
+      emailVerified: user.emailVerified || false,
+      isAdmin: false, // Regular users are not admin
+    };
+
+    const response = await createSessionResponse(req, sessionData, {
       success: true,
       user: {
         name: user.name,
@@ -77,25 +88,6 @@ export async function POST(req: NextRequest) {
         plan: user.plan,
       },
     });
-
-    // Set auth cookie
-    console.log('🍪 [LOGIN] Setting authentication cookies...');
-    response.cookies.set('saintsal_auth', user._id.toString(), {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 60 * 60 * 24 * 30, // 30 days
-    });
-    console.log(`✅ [LOGIN] Auth cookie set: ${user._id.toString()}`);
-
-    // Also set user email cookie for integrations
-    response.cookies.set('saintsal_user_email', user.email.toLowerCase(), {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 60 * 60 * 24 * 30, // 30 days
-    });
-    console.log(`✅ [LOGIN] Email cookie set: ${user.email.toLowerCase()}`);
 
     console.log(`🎉 [LOGIN] LOGIN SUCCESSFUL! Welcome back, ${user.name}! Plan: ${user.plan.toUpperCase()}`);
     return response;

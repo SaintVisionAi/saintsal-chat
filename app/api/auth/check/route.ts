@@ -1,8 +1,9 @@
 /**
  * app/api/auth/check/route.ts
- * Check if user is authenticated
+ * Check if user is authenticated using secure sessions
  */
 import { NextRequest, NextResponse } from 'next/server';
+import { getSession } from '../../../../lib/session';
 import { MongoClient, ObjectId } from 'mongodb';
 
 const MONGODB_URI = process.env.MONGODB_URI!;
@@ -11,26 +12,42 @@ export async function GET(req: NextRequest) {
   console.log('🔐 [AUTH-CHECK] Starting authentication check...');
 
   try {
-    // Check for both cookie names for backwards compatibility
-    const authCookie = req.cookies.get('saintsal_auth')?.value || req.cookies.get('saintsal_session')?.value;
+    // Create a response first to get session
+    const res = NextResponse.json({ authenticated: false });
+    const session = await getSession(req, res);
 
-    if (!authCookie) {
-      console.log('❌ [AUTH-CHECK] No auth cookie found');
-      return NextResponse.json({
-        authenticated: false,
-      });
+    // Check if session has user data
+    if (!session.userId || !session.email) {
+      console.log('❌ [AUTH-CHECK] No session data found');
+      console.log('🔍 [AUTH-CHECK] Session keys:', Object.keys(session));
+      return res; // Return the response with session cookie
     }
-    console.log(`🍪 [AUTH-CHECK] Auth cookie found: ${authCookie}`);
 
-    // Verify auth cookie with MongoDB
-    console.log('📊 [AUTH-CHECK] Connecting to MongoDB...');
+    // For admin users, skip MongoDB lookup
+    if (session.isAdmin) {
+      console.log(`✅ [AUTH-CHECK] Admin authenticated: ${session.email}`);
+      const adminResponse = NextResponse.json({
+        authenticated: true,
+        user: {
+          name: session.name,
+          email: session.email,
+          plan: session.plan,
+          isAdmin: true,
+        },
+      });
+      // Ensure session cookie is included
+      const adminSession = await getSession(req, adminResponse);
+      return adminResponse;
+    }
+
+    // For regular users, verify they still exist in database
+    console.log('📊 [AUTH-CHECK] Verifying user in MongoDB...');
     const client = await MongoClient.connect(MONGODB_URI);
     const db = client.db(process.env.MONGODB_DB || 'saintsal_db');
     const users = db.collection('users');
-    console.log('✅ [AUTH-CHECK] MongoDB connected');
 
-    console.log('🔍 [AUTH-CHECK] Looking up user by ID...');
-    const user = await users.findOne({ _id: new ObjectId(authCookie) });
+    console.log(`🔍 [AUTH-CHECK] Looking up user: ${session.userId}`);
+    const user = await users.findOne({ _id: new ObjectId(session.userId) });
     await client.close();
 
     if (!user) {
@@ -40,10 +57,18 @@ export async function GET(req: NextRequest) {
       });
     }
 
+    // Verify email matches (in case user was deleted/recreated)
+    if (user.email.toLowerCase() !== session.email.toLowerCase()) {
+      console.log('❌ [AUTH-CHECK] Email mismatch - session invalidated');
+      return NextResponse.json({
+        authenticated: false,
+      });
+    }
+
     console.log(`✅ [AUTH-CHECK] User authenticated: ${user.name} (${user.email})`);
     console.log(`📦 [AUTH-CHECK] Plan: ${user.plan.toUpperCase()} | Usage: ${user.usage?.messagesThisMonth || 0}/${user.limits?.messagesPerMonth || 0} messages`);
 
-    return NextResponse.json({
+    const userResponse = NextResponse.json({
       authenticated: true,
       user: {
         name: user.name,
@@ -51,10 +76,14 @@ export async function GET(req: NextRequest) {
         plan: user.plan,
       },
     });
+    // Ensure session cookie is included
+    const userSession = await getSession(req, userResponse);
+    return userResponse;
   } catch (error) {
     console.error('❌ [AUTH-CHECK] Error:', error);
-    return NextResponse.json({
+    const errorResponse = NextResponse.json({
       authenticated: false,
     });
+    return errorResponse;
   }
 }

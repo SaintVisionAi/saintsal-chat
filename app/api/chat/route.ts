@@ -46,10 +46,13 @@ export async function POST(req: NextRequest) {
     }
     console.log(`📝 [CHAT] Message received (${message.length} chars)`);
 
-    // 🔐 CHECK USER AUTHENTICATION (check both cookie names)
-    const authCookie = req.cookies.get('saintsal_auth')?.value || req.cookies.get('saintsal_session')?.value;
-    if (!authCookie) {
-      console.log('❌ [CHAT] No auth cookie - user not authenticated');
+    // 🔐 CHECK USER AUTHENTICATION (use secure session)
+    const { getSession } = await import('../../../lib/session');
+    const res = new Response();
+    const session = await getSession(req, res);
+    
+    if (!session.userId || !session.email) {
+      console.log('❌ [CHAT] No session - user not authenticated');
       return new Response(
         JSON.stringify({ error: "Authentication required" }),
         {
@@ -58,7 +61,7 @@ export async function POST(req: NextRequest) {
         }
       );
     }
-    console.log(`🔐 [CHAT] User ID: ${authCookie}`);
+    console.log(`🔐 [CHAT] User ID: ${session.userId}, Email: ${session.email}`);
 
     // 📧 CHECK EMAIL VERIFICATION
     const client = await getMongoClient();
@@ -66,7 +69,7 @@ export async function POST(req: NextRequest) {
     const users = db.collection("users");
 
     const { ObjectId } = require('mongodb');
-    const user = await users.findOne({ _id: new ObjectId(authCookie) });
+    const user = await users.findOne({ _id: new ObjectId(session.userId) });
 
     if (!user) {
       console.log('❌ [CHAT] User not found');
@@ -97,7 +100,7 @@ export async function POST(req: NextRequest) {
 
     // 📊 CHECK MESSAGE LIMIT
     console.log('📊 [CHAT] Checking message limit...');
-    const hasMessageLimit = await checkUserLimit(authCookie, 'messages');
+    const hasMessageLimit = await checkUserLimit(session.userId, 'messages');
     if (!hasMessageLimit) {
       console.log('❌ [CHAT] Message limit exceeded!');
       return new Response(
@@ -120,7 +123,7 @@ export async function POST(req: NextRequest) {
     // Store user message
     console.log('💾 [CHAT] Storing user message in MongoDB...');
     await messagesCol.insertOne({
-      userId: new ObjectId(authCookie),
+      userId: new ObjectId(session.userId),
       role: "user",
       content: message,
       timestamp: new Date(),
@@ -134,7 +137,7 @@ export async function POST(req: NextRequest) {
     console.log('🔍 [RAG] Starting vector search...');
     try {
       // Check RAG limit
-      const hasRagLimit = await checkUserLimit(authCookie, 'rag');
+      const hasRagLimit = await checkUserLimit(session.userId, 'rag');
       if (!hasRagLimit) {
         console.log('⚠️ [RAG] RAG query limit exceeded - skipping RAG');
       } else {
@@ -148,49 +151,70 @@ export async function POST(req: NextRequest) {
         console.log(`✅ [RAG] Embedding created (${queryEmbedding.length} dimensions)`);
 
         console.log('🔎 [RAG] Executing vector search...');
-        const vectorSearchResults = await documentsCol.aggregate([
-          {
-            $vectorSearch: {
-              index: "vector_index",
-              path: "embedding",
-              queryVector: queryEmbedding,
-              numCandidates: 150,
-              limit: 5
+        try {
+          const vectorSearchResults = await documentsCol.aggregate([
+            {
+              $vectorSearch: {
+                index: "vector_index",
+                path: "embedding",
+                queryVector: queryEmbedding,
+                numCandidates: 150,
+                limit: 10, // Get more results, then filter by user
+                filter: {
+                  userId: new ObjectId(session.userId) // Only search user's documents
+                }
+              }
+            },
+            {
+              $match: {
+                userId: new ObjectId(session.userId) // Double-check user filter
+              }
+            },
+            {
+              $limit: 5 // Limit to top 5 results
+            },
+            {
+              $project: {
+                _id: 0,
+                content: 1,
+                metadata: 1,
+                score: { $meta: "vectorSearchScore" }
+              }
             }
-          },
-          {
-            $project: {
-              _id: 0,
-              content: 1,
-              metadata: 1,
-              score: { $meta: "vectorSearchScore" }
-            }
+          ]).toArray();
+
+          if (vectorSearchResults.length > 0) {
+            ragContext = "\n\nRelevant Knowledge:\n" +
+              vectorSearchResults
+                .map((doc: any, idx: number) =>
+                  `[${idx + 1}] ${doc.content} (relevance: ${doc.score.toFixed(3)})`
+                )
+                .join("\n");
+            ragUsed = true;
+
+            console.log(`✅ [RAG] Found ${vectorSearchResults.length} relevant documents`);
+            vectorSearchResults.forEach((doc: any, idx: number) => {
+              console.log(`   📄 [RAG] Doc ${idx + 1}: Score ${doc.score.toFixed(3)}`);
+            });
+
+            // Increment RAG usage
+            await incrementUsage(session.userId, 'rag', 1);
+            console.log('✅ [RAG] RAG usage incremented');
+          } else {
+            console.log('⚠️ [RAG] No relevant documents found for user');
           }
-        ]).toArray();
-
-        if (vectorSearchResults.length > 0) {
-          ragContext = "\n\nRelevant Knowledge:\n" +
-            vectorSearchResults
-              .map((doc: any, idx: number) =>
-                `[${idx + 1}] ${doc.content} (relevance: ${doc.score.toFixed(3)})`
-              )
-              .join("\n");
-          ragUsed = true;
-
-          console.log(`✅ [RAG] Found ${vectorSearchResults.length} relevant documents`);
-          vectorSearchResults.forEach((doc: any, idx: number) => {
-            console.log(`   📄 [RAG] Doc ${idx + 1}: Score ${doc.score.toFixed(3)}`);
-          });
-
-          // Increment RAG usage
-          await incrementUsage(authCookie, 'rag', 1);
-          console.log('✅ [RAG] RAG usage incremented');
-        } else {
-          console.log('⚠️ [RAG] No relevant documents found');
+        } catch (vectorSearchError: any) {
+          // Vector index might not exist yet - that's OK, continue without RAG
+          if (vectorSearchError.message?.includes('index') || vectorSearchError.message?.includes('vector')) {
+            console.log('⚠️ [RAG] Vector index not found - RAG disabled. Run: npm run db:setup-vector-index');
+          } else {
+            console.error("❌ [RAG] Vector search error:", vectorSearchError);
+          }
         }
       }
     } catch (ragError) {
-      console.error("❌ [RAG] Vector search error:", ragError);
+      console.error("❌ [RAG] RAG processing error:", ragError);
+      // Continue without RAG if there's an error
     }
 
     const systemPrompt = `You are SaintSal™ - the AI embodiment of Sal Couzzo's intellectual legacy.
@@ -260,7 +284,7 @@ Direct, powerful, authentic communication.`;
             // Store assistant response
             console.log('💾 [CHAT] Storing assistant response...');
             await messagesCol.insertOne({
-              userId: new ObjectId(authCookie),
+              userId: new ObjectId(session.userId),
               role: "assistant",
               content: fullResponse,
               model: model,
@@ -270,7 +294,7 @@ Direct, powerful, authentic communication.`;
             console.log('✅ [CHAT] Assistant response stored');
 
             // Increment message usage
-            await incrementUsage(authCookie, 'messages', 1);
+            await incrementUsage(session.userId, 'messages', 1);
             console.log('✅ [CHAT] Message usage incremented');
 
           } catch (openaiError) {
@@ -314,7 +338,7 @@ Direct, powerful, authentic communication.`;
 
               console.log('💾 [CHAT] Storing assistant response...');
               await messagesCol.insertOne({
-                userId: new ObjectId(authCookie),
+                userId: new ObjectId(session.userId),
                 role: "assistant",
                 content: fullResponse,
                 model: "claude-sonnet-4",
@@ -324,7 +348,7 @@ Direct, powerful, authentic communication.`;
               console.log('✅ [CHAT] Assistant response stored');
 
               // Increment message usage
-              await incrementUsage(authCookie, 'messages', 1);
+              await incrementUsage(session.userId, 'messages', 1);
               console.log('✅ [CHAT] Message usage incremented');
 
             } catch (claudeError) {
@@ -376,7 +400,7 @@ Direct, powerful, authentic communication.`;
 
     console.log('💾 [CHAT] Storing assistant response...');
     await messagesCol.insertOne({
-      userId: new ObjectId(authCookie),
+      userId: new ObjectId(session.userId),
       role: "assistant",
       content: assistantText,
       model: model,
@@ -386,7 +410,7 @@ Direct, powerful, authentic communication.`;
     console.log('✅ [CHAT] Assistant response stored');
 
     // Increment message usage
-    await incrementUsage(authCookie, 'messages', 1);
+    await incrementUsage(session.userId, 'messages', 1);
     console.log('✅ [CHAT] Message usage incremented');
 
     console.log('🎉 [CHAT] Non-streaming chat complete');

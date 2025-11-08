@@ -115,6 +115,7 @@ export default function WalkieTalkie() {
 
       const sttResponse = await fetch('/api/voice/stt', {
         method: 'POST',
+        credentials: 'include', // Include session cookies
         body: formData,
       });
 
@@ -156,6 +157,7 @@ export default function WalkieTalkie() {
       const chatResponse = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include', // Include session cookies
         body: JSON.stringify({
           message: userText,
           stream: true,
@@ -251,6 +253,7 @@ export default function WalkieTalkie() {
       const response = await fetch('/api/elevenlabs/tts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include', // Include session cookies
         body: JSON.stringify({ text }),
       });
 
